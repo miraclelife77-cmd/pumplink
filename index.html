@@ -128,6 +128,32 @@ svg.trend-svg{ width:100%; height:150px; margin-top:6px; }
 .flow-step .t{ font-weight:800; font-size:13.5px; margin-bottom:4px; }
 .flow-step .d{ font-size:10.5px; color:var(--gray); line-height:1.5; }
 .flow-arrow{ color:var(--line); font-size:16px; padding-top:16px; }
+
+/* compare modal */
+.compare-overlay{
+  display:none; position:fixed; inset:0; background:rgba(10,20,35,0.55); z-index:200;
+  align-items:center; justify-content:center; padding:24px;
+}
+.compare-overlay.open{ display:flex; }
+.compare-panel{
+  background:#fff; border-radius:var(--radius-lg); max-width:1120px; width:100%; max-height:88vh; overflow-y:auto;
+  padding:26px 28px;
+}
+.compare-panel-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.compare-panel-head h3{ margin:0; font-size:18px; font-weight:800; color:var(--navy); }
+.compare-panel-head button{ background:none; border:none; font-size:20px; color:var(--gray); cursor:pointer; }
+.compare-note{ font-size:12px; color:var(--gray); margin:0 0 18px; }
+.compare-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:14px; }
+@media (max-width:1000px){ .compare-grid{ grid-template-columns:repeat(2,1fr);} }
+@media (max-width:560px){ .compare-grid{ grid-template-columns:1fr;} }
+.compare-card{ border:1px solid var(--line); border-radius:var(--radius-md); padding:16px; display:flex; flex-direction:column; gap:6px; }
+.compare-card.is-primary{ border:2px solid var(--brand-blue); }
+.compare-card.is-placeholder{ opacity:.72; }
+.compare-brand{ font-size:11px; font-weight:800; letter-spacing:.03em; color:var(--brand-blue); text-transform:uppercase; }
+.compare-model{ font-weight:800; font-size:14.5px; color:var(--navy); min-height:38px; }
+.compare-spec{ font-size:11.5px; color:var(--gray); display:flex; justify-content:space-between; border-bottom:1px dashed var(--line); padding:4px 0; }
+.compare-spec b{ color:var(--navy); font-weight:700; }
+.compare-badge{ font-size:9.5px; font-weight:700; background:var(--paper-2); color:var(--gray); border-radius:5px; padding:2px 6px; align-self:flex-start; margin-top:4px; }
 </style>
 </head>
 <body>
@@ -251,36 +277,69 @@ svg.trend-svg{ width:100%; height:150px; margin-top:6px; }
 <div class="widget-grid">
   <div class="widget">
     <h4>펌프 빠른 검색</h4>
-    <div class="field"><label>이송 유체</label><select><option>선택하세요</option></select></div>
-    <div class="field-row" style="margin-bottom:12px;">
-      <div class="field" style="flex:2; margin-bottom:0;"><label>유량 (Q)</label><input placeholder="입력하세요"></div>
-      <div class="field" style="flex:1; margin-bottom:0;"><label>&nbsp;</label><select><option>m³/h</option></select></div>
+    <div class="field">
+      <label>이송 유체 유형</label>
+      <select id="qFluidType">
+        <option value="GENERAL_WATER">일반 용수/세척수</option>
+        <option value="CORROSIVE_CHEM">부식성 화학약품(산/알칼리)</option>
+        <option value="OIL_HYDROCARBON">오일/탄화수소류</option>
+        <option value="FOOD_SANITARY">식품/위생 등급</option>
+        <option value="ABRASIVE_SLURRY">마모성 슬러리/분체</option>
+        <option value="SOLVENT">용제(솔벤트)</option>
+      </select>
     </div>
     <div class="field-row" style="margin-bottom:12px;">
-      <div class="field" style="flex:2; margin-bottom:0;"><label>양정 (H)</label><input placeholder="입력하세요"></div>
+      <div class="field" style="flex:2; margin-bottom:0;"><label>유량 (Q)</label><input id="qFlow" type="number" placeholder="예: 150" value="150"></div>
+      <div class="field" style="flex:1; margin-bottom:0;"><label>&nbsp;</label>
+        <select id="qFlowUnit"><option value="lpm">L/min</option><option value="cmh">m³/h</option></select>
+      </div>
+    </div>
+    <div class="field-row" style="margin-bottom:12px;">
+      <div class="field" style="flex:2; margin-bottom:0;"><label>양정 (H)</label><input id="qHead" type="number" placeholder="예: 40" value="40"></div>
       <div class="field" style="flex:1; margin-bottom:0;"><label>&nbsp;</label><select><option>m</option></select></div>
     </div>
-    <div class="field-row" style="margin-bottom:12px;">
-      <div class="field" style="flex:2; margin-bottom:0;"><label>점도</label><select><option>선택하세요</option></select></div>
+    <div class="field-row" id="qViscRow" style="margin-bottom:6px;">
+      <div class="field" style="flex:2; margin-bottom:0;"><label>점도</label><input id="qVisc" type="number" placeholder="예: 100" value="100"></div>
       <div class="field" style="flex:1; margin-bottom:0;"><label>&nbsp;</label><select><option>cP</option></select></div>
     </div>
-    <div class="field"><label>접액부 재질</label><select><option>선택하세요</option></select></div>
-    <button class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> 추천 펌프 찾기</button>
+    <div class="field" style="margin-bottom:8px;">
+      <label style="display:flex; align-items:center; gap:6px; font-weight:600; margin-bottom:0;">
+        <input type="checkbox" id="qViscUnknown" style="width:auto;"> 점도를 몰라요
+      </label>
+      <select id="qViscLevel" style="display:none; margin-top:6px;">
+        <option value="WATER_LIKE">물처럼 묽음 (물, 세척수)</option>
+        <option value="OIL_LIKE">오일 정도 (윤활유, 식용유)</option>
+        <option value="SYRUP_LIKE">꿀/시럽 정도 (접착제, 도료)</option>
+        <option value="PASTE_LIKE">페이스트/슬러리 (슬러지, 페인트 원액)</option>
+      </select>
+    </div>
+    <p style="font-size:11px; color:var(--gray); margin:0 0 10px;">접액부 재질(다이어프램/시트)은 이송 유체 유형에 따라 자동으로 매칭됩니다.</p>
+    <button class="btn btn-primary" id="qSearchBtn"><i class="fa-solid fa-magnifying-glass"></i> 추천 펌프 찾기</button>
   </div>
 
   <div class="widget">
     <h4>추천 펌프</h4>
-    <span class="pump-card-top">TOP 1</span>
+    <span class="pump-card-top">ARO</span>
+    <div id="rWarning" style="display:none; background:var(--paper-2); border-left:3px solid var(--amber); border-radius:6px; padding:10px 12px; font-size:12.5px; color:var(--navy); margin-bottom:12px; line-height:1.5;"></div>
     <div class="pump-photo-ph"><i class="fa-solid fa-diagram-project"></i></div>
-    <div class="pump-name">ARO 666120-344-C</div>
-    <div class="pump-sub">공압식 다이어프램 펌프</div>
-    <div class="spec-row"><span>최대 유량</span><span>57.0 L/min</span></div>
-    <div class="spec-row"><span>최대 압력</span><span>8.3 bar</span></div>
-    <div class="spec-row"><span>접액부 재질</span><span>PP / PTFE</span></div>
+    <div class="pump-name" id="rName">-</div>
+    <div class="pump-sub" id="rSub">-</div>
+    <div class="spec-row" style="background:var(--paper-2); border-radius:6px; padding:6px 8px; border-bottom:none; margin-bottom:6px;">
+      <span style="font-weight:700; color:var(--navy);">모델 코드(예시)</span><span id="rModelCode" style="font-weight:800; color:var(--brand-blue); font-family:var(--mono);">-</span>
+    </div>
+    <div class="spec-row"><span>최대 유량</span><span id="rFlow">-</span></div>
+    <div class="spec-row"><span>이 양정에서 가능 유량</span><span id="rHead">-</span></div>
+    <div class="spec-row"><span>추천 다이어프램/시트</span><span id="rMaterial">-</span></div>
     <div class="spec-row"><span>구동 방식</span><span>Air Operated</span></div>
     <div class="pump-btn-row">
-      <button class="btn-outline">상세보기</button>
-      <button class="btn-primary" style="border:none;">비교하기</button>
+      <button class="btn-outline" onclick="window.open('https://www.arozone.com/en/pneumatic-diaphragm-pumps/','_blank')">ARO 홈페이지</button>
+      <button class="btn-primary" style="border:none;" id="qCompareBtn">비교하기</button>
+    </div>
+    <div style="display:flex; gap:6px; margin-top:12px; padding-top:10px; border-top:1px dashed var(--line);">
+      <span style="font-size:10.5px; color:var(--gray); flex:1; text-align:center; background:var(--paper-2); border-radius:8px; padding:6px 2px; line-height:1.6;"><i class="fa-solid fa-lock" style="font-size:9px; margin-right:2px;"></i>Wilden<br><span style="font-size:9px; opacity:.7;">준비중</span></span>
+      <span style="font-size:10.5px; color:var(--gray); flex:1; text-align:center; background:var(--paper-2); border-radius:8px; padding:6px 2px; line-height:1.6;"><i class="fa-solid fa-lock" style="font-size:9px; margin-right:2px;"></i>Sandpiper<br><span style="font-size:9px; opacity:.7;">준비중</span></span>
+      <span style="font-size:10.5px; color:var(--gray); flex:1; text-align:center; background:var(--paper-2); border-radius:8px; padding:6px 2px; line-height:1.6;"><i class="fa-solid fa-lock" style="font-size:9px; margin-right:2px;"></i>Yamada<br><span style="font-size:9px; opacity:.7;">준비중</span></span>
+      <span style="font-size:10.5px; color:var(--gray); flex:1; text-align:center; background:var(--paper-2); border-radius:8px; padding:6px 2px; line-height:1.6;"><i class="fa-solid fa-lock" style="font-size:9px; margin-right:2px;"></i>Graco<br><span style="font-size:9px; opacity:.7;">준비중</span></span>
     </div>
   </div>
 
@@ -359,5 +418,208 @@ svg.trend-svg{ width:100%; height:150px; margin-top:6px; }
   </div>
 </footer>
 
+<!-- ============ COMPARE MODAL ============ -->
+<div class="compare-overlay" id="compareOverlay">
+  <div class="compare-panel">
+    <div class="compare-panel-head">
+      <h3>브랜드별 펌프 비교</h3>
+      <button id="compareCloseBtn" aria-label="닫기">&times;</button>
+    </div>
+    <p class="compare-note">지금 입력하신 조건 기준 비교입니다. ARO 외 브랜드는 아직 실제 데이터 연동 전이라 <b>예시 값</b>입니다.</p>
+    <div class="compare-grid" id="compareGrid"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ARO PRO 시리즈 사이즈별 실 스펙 (공식 데이터시트 기준, model_code는 카탈로그의 "Best Selling Models" 실제 코드)
+  var families = [
+    {size:"1/4\"", construction:"non-metallic", flow:20, pressure:8.6, body:"PP/Acetal/PVDF", model:"PD01P-APS-PAA-A"},
+    {size:"3/8\"", construction:"non-metallic", flow:40.1, pressure:6.9, body:"PP/Acetal/PVDF", model:"PD03P-APS-PAA"},
+    {size:"1/2\"", construction:"non-metallic", flow:54.5, pressure:6.9, body:"PP/Acetal/PVDF", model:"PD05P-APS-PAA-B"},
+    {size:"3/4\"", construction:"non-metallic", flow:56, pressure:6.9, body:"PP", model:"PD07P-APS-PAA"},
+    {size:"1\"", construction:"non-metallic", flow:178, pressure:8.3, body:"PP/PVDF", model:"6661AJ-3EB-C"},
+    {size:"1-1/2\"", construction:"non-metallic", flow:378.5, pressure:8.3, body:"PP/PVDF", model:"6661T3-389-C"},
+    {size:"2\"", construction:"non-metallic", flow:548.8, pressure:8.3, body:"PP/PVDF", model:"6662A3-333-C"},
+    {size:"1/2\"", construction:"metallic", flow:45.4, pressure:6.9, body:"알루미늄/스테인리스", model:"PD05A-BSS-FAA-B"},
+    {size:"3/4\"", construction:"metallic", flow:51.5, pressure:6.9, body:"알루미늄/스테인리스", model:"PD07R-BAS-FAA"},
+    {size:"1\"", construction:"metallic", flow:133, pressure:8.3, body:"알루미늄/스테인리스/주철", model:"666100-3EB-C"},
+    {size:"1-1/2\"", construction:"metallic", flow:340.7, pressure:8.3, body:"알루미늄/스테인리스/주철", model:"66617A-133-C"},
+    {size:"2\"", construction:"metallic", flow:651, pressure:8.3, body:"알루미늄/스테인리스/주철", model:"666252-244-C"},
+    {size:"3\"", construction:"metallic", flow:897, pressure:8.3, body:"알루미늄/스테인리스/주철", model:"666322-144-C"}
+  ];
+  families.forEach(function(f){ f.headMax = Math.round(f.pressure * 10.2); });
+  // 이송물질 유형별 추천 재질 + 선호 구성(금속/비금속/무관) (fluid_type_material_map.csv 기준)
+  var fluidMap = {
+    GENERAL_WATER:{diaphragm:"Santoprene", seat:"Santoprene/Nitrile", construction:"any"},
+    CORROSIVE_CHEM:{diaphragm:"PTFE/Viton", seat:"PTFE/Viton", construction:"non-metallic"},
+    OIL_HYDROCARBON:{diaphragm:"Nitrile", seat:"Nitrile", construction:"metallic"},
+    FOOD_SANITARY:{diaphragm:"Hytrel(FDA)", seat:"Hytrel(FDA)", construction:"metallic"},
+    ABRASIVE_SLURRY:{diaphragm:"Santoprene", seat:"스테인리스(400계)", construction:"metallic"},
+    SOLVENT:{diaphragm:"Viton", seat:"Viton", construction:"non-metallic"}
+  };
+  // 점도 모를 때 정성적 선택지 → 대표 cP값 (viscosity_fallback.csv 참고)
+  var viscLevelMidpoint = {WATER_LIKE:25, OIL_LIKE:275, SYRUP_LIKE:2750, PASTE_LIKE:27500};
+  var lastResult = null;
+
+  function viscosityDerate(cp){
+    if(cp<=50) return 1;
+    if(cp<=500) return 1.15;
+    if(cp<=5000) return 1.35;
+    return 1.6;
+  }
+
+  // 다이어프램 펌프는 양정이 올라갈수록 낼 수 있는 유량이 줄어든다 (선형 근사: 0 양정=최대유량, 최대양정=유량 0)
+  // 실제 성능곡선(비선형)을 디지털화한 값은 아니며, 카탈로그 그래프 기반 근사치입니다.
+  function availableFlowAt(family, head){
+    if(head >= family.headMax) return 0;
+    return family.flow * (1 - head / family.headMax);
+  }
+
+  function recommend(){
+    var fluidType = document.getElementById('qFluidType').value;
+    var flow = parseFloat(document.getElementById('qFlow').value) || 0;
+    var flowUnit = document.getElementById('qFlowUnit').value;
+    if(flowUnit === 'cmh'){ flow = flow * 1000 / 60; }
+    var head = parseFloat(document.getElementById('qHead').value) || 0;
+
+    var viscUnknown = document.getElementById('qViscUnknown').checked;
+    var visc;
+    if(viscUnknown){
+      visc = viscLevelMidpoint[document.getElementById('qViscLevel').value];
+    } else {
+      visc = parseFloat(document.getElementById('qVisc').value) || 0;
+    }
+    var requiredFlow = flow * viscosityDerate(visc);
+    var mat = fluidMap[fluidType];
+
+    var rName = document.getElementById('rName');
+    var rSub = document.getElementById('rSub');
+    var rModelCode = document.getElementById('rModelCode');
+    var rFlow = document.getElementById('rFlow');
+    var rHead = document.getElementById('rHead');
+    var rMaterial = document.getElementById('rMaterial');
+    var rWarning = document.getElementById('rWarning');
+
+    function showWarning(msg){
+      rWarning.style.display = 'block';
+      rWarning.textContent = msg;
+    }
+    function clearWarning(){
+      rWarning.style.display = 'none';
+      rWarning.textContent = '';
+    }
+    function clearResult(){
+      rName.textContent = '-'; rSub.textContent = '-'; rModelCode.textContent = '-';
+      rFlow.textContent = '-'; rHead.textContent = '-'; rMaterial.textContent = '-';
+      lastResult = null;
+    }
+
+    // 1단계: 이송물질에 맞는 구성(금속/비금속)으로 먼저 좁힌다
+    var pool = families.filter(function(f){
+      return mat.construction === 'any' || f.construction === mat.construction;
+    });
+
+    // 2단계: 이 구성 안에서 물리적으로 낼 수 있는 최대 양정을 넘어서는지 확인
+    var maxHeadInPool = Math.max.apply(null, pool.map(function(f){ return f.headMax; }));
+    if(head >= maxHeadInPool){
+      clearResult();
+      showWarning('요청하신 양정(' + head + ' m)은 이 이송물질에 적합한 ARO 재질 구성(' +
+        (mat.construction === 'metallic' ? '금속' : mat.construction === 'non-metallic' ? '비금속' : '전체') +
+        ')이 낼 수 있는 최대 양정(약 ' + maxHeadInPool + ' m)을 초과합니다. 양정을 낮추거나 다단 구성/타 펌프 타입을 검토하세요.');
+      return;
+    }
+
+    // 3단계: 해당 양정에서 요청 유량을 낼 수 있는 사이즈 탐색
+    var candidates = pool.map(function(f){
+      return {f:f, avail: availableFlowAt(f, head)};
+    }).filter(function(c){ return c.avail >= requiredFlow; });
+
+    if(candidates.length === 0){
+      clearResult();
+      showWarning('이 양정(' + head + ' m)에서는 요청하신 유량(' + Math.round(requiredFlow) +
+        ' L/min)을 낼 수 있는 ARO 모델이 없습니다. 양정을 낮추거나, 유량을 줄이거나, 펌프 2대 병렬 구성을 검토하세요.');
+      return;
+    }
+
+    candidates.sort(function(a,b){ return a.f.flow - b.f.flow; });
+    var best = candidates[0].f;
+    var availFlow = candidates[0].avail;
+
+    clearWarning();
+    rName.textContent = 'ARO ' + best.size + ' ' + (best.construction === 'metallic' ? '금속' : '비금속');
+    rSub.textContent = '공압식 다이어프램 펌프 · 바디: ' + best.body;
+    rModelCode.textContent = best.model;
+    rFlow.textContent = best.flow + ' L/min (무양정 기준)';
+    rHead.textContent = Math.round(availFlow) + ' L/min (요청 양정 ' + head + 'm 기준)';
+    rMaterial.textContent = mat.diaphragm + ' / ' + mat.seat;
+
+    lastResult = {
+      size: best.size, construction: best.construction, model: best.model,
+      flow: best.flow, availFlow: availFlow, headInput: head,
+      material: mat.diaphragm + ' / ' + mat.seat
+    };
+  }
+
+  document.getElementById('qViscUnknown').addEventListener('change', function(){
+    document.getElementById('qViscRow').style.display = this.checked ? 'none' : 'flex';
+    document.getElementById('qViscLevel').style.display = this.checked ? 'block' : 'none';
+  });
+  document.getElementById('qSearchBtn').addEventListener('click', recommend);
+  recommend();
+
+  function buildCompareCard(brand, modelName, flowText, headText, materialText, isPrimary, isPlaceholder, linkUrl){
+    var cls = 'compare-card' + (isPrimary ? ' is-primary' : '') + (isPlaceholder ? ' is-placeholder' : '');
+    var footer = isPlaceholder
+      ? '<span class="compare-badge">예시 데이터</span>'
+      : (linkUrl ? '<a href="' + linkUrl + '" target="_blank" style="font-size:11px; color:var(--brand-blue); margin-top:6px; font-weight:700; text-decoration:none;">홈페이지 <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:9px;"></i></a>' : '');
+    return '<div class="' + cls + '">' +
+      '<div class="compare-brand">' + brand + '</div>' +
+      '<div class="compare-model">' + modelName + '</div>' +
+      '<div class="compare-spec"><span>유량</span><b>' + flowText + '</b></div>' +
+      '<div class="compare-spec"><span>이 양정에서</span><b>' + headText + '</b></div>' +
+      '<div class="compare-spec"><span>접액부 재질</span><b>' + materialText + '</b></div>' +
+      footer +
+    '</div>';
+  }
+
+  function openCompare(){
+    var grid = document.getElementById('compareGrid');
+    if(!lastResult){
+      grid.innerHTML = '<p style="grid-column:1/-1; font-size:13px; color:var(--gray);">먼저 "추천 펌프 찾기"로 조건을 입력해주세요.</p>';
+    } else {
+      var sizeLabel = lastResult.size + ' ' + (lastResult.construction === 'metallic' ? '금속' : '비금속') + ' 상당';
+      var deratRatio = lastResult.flow > 0 ? (lastResult.availFlow / lastResult.flow) : 1;
+      var cards = buildCompareCard('ARO', lastResult.model,
+        lastResult.flow + ' L/min (무양정)',
+        Math.round(lastResult.availFlow) + ' L/min',
+        lastResult.material, true, false, 'https://www.arozone.com/en/pneumatic-diaphragm-pumps/');
+
+      var dummies = [
+        {brand:'Wilden', code:'WPX-' + Math.round(lastResult.flow), factor:0.92, material:'PTFE/Santoprene(예시)'},
+        {brand:'Sandpiper', code:'SPX-' + Math.round(lastResult.flow), factor:0.88, material:'Nitrile/Santoprene(예시)'},
+        {brand:'Yamada', code:'YPX-' + Math.round(lastResult.flow), factor:1.05, material:'PTFE/Neoprene(예시)'},
+        {brand:'Graco', code:'GPX-' + Math.round(lastResult.flow), factor:0.97, material:'PTFE/Buna-N(예시)'}
+      ];
+      dummies.forEach(function(d){
+        var f = Math.round(lastResult.flow * d.factor);
+        var avail = Math.round(f * deratRatio);
+        cards += buildCompareCard(d.brand, d.brand + ' ' + sizeLabel + ' (' + d.code + ')',
+          f + ' L/min (무양정, 예시)', avail + ' L/min (예시)', d.material, false, true, null);
+      });
+      grid.innerHTML = cards;
+    }
+    document.getElementById('compareOverlay').classList.add('open');
+  }
+
+  document.getElementById('qCompareBtn').addEventListener('click', openCompare);
+  document.getElementById('compareCloseBtn').addEventListener('click', function(){
+    document.getElementById('compareOverlay').classList.remove('open');
+  });
+  document.getElementById('compareOverlay').addEventListener('click', function(e){
+    if(e.target === this){ this.classList.remove('open'); }
+  });
+})();
+</script>
 </body>
 </html>
