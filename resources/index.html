@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>실무 자료 | PUMPLINK</title>
+<link rel="stylesheet" href="../assets/css/site.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+.page-hero{
+  background: linear-gradient(160deg, var(--navy-deep) 0%, var(--navy) 68%, #0d3c86 100%);
+  color:#eef3fb; padding:34px 28px 28px;
+}
+.page-hero h1{ font-weight:800; font-size:clamp(22px,3vw,30px); margin:0 0 6px; }
+.page-hero p{ font-size:14px; opacity:.9; margin:0; max-width:640px; line-height:1.6; }
+
+.res-wrap{ max-width:1400px; margin:0 auto; padding:26px 28px 50px; }
+.res-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-top:16px; }
+.res-card{
+  background:#fff; border:1px solid var(--line); border-radius:var(--radius-md); padding:22px;
+  display:flex; flex-direction:column; gap:10px; box-shadow:var(--shadow-card); transition:box-shadow .15s, transform .15s;
+}
+.res-card:hover{ box-shadow:var(--shadow-hover); transform:translateY(-2px); }
+.res-card .ic{
+  width:46px; height:46px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:19px; color:#fff;
+}
+.res-card h3{ margin:8px 0 2px; font-size:16px; font-weight:800; color:var(--ink); }
+.res-card p{ margin:0; font-size:12.8px; color:var(--gray); line-height:1.6; flex:1; }
+.res-card .cnt{ font-family:var(--mono); font-size:11.5px; color:var(--brand-blue); font-weight:700; }
+.res-card .go{ font-size:13px; font-weight:700; color:var(--navy); margin-top:6px; }
+.res-card.featured{ border:1.5px solid var(--brand-blue); box-shadow:0 0 0 3px rgba(13,85,192,0.08); }
+
+@media (max-width: 1100px){ .res-grid{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width: 620px){ .res-grid{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="nav-left">
+    <a href="../index.html" class="pl-logo">
+      <span class="word">PUMPLINK</span>
+      <span class="tag">CONNECT FLOW, POWER INDUSTRY</span>
+    </a>
+    <ul class="nav-menu">
+      <li><a href="../index.html">펌프 선정</a></li>
+      <li><a href="../index.html">견적 문의</a></li>
+      <li><a href="../index.html">렌탈 서비스</a></li>
+      <li><a href="index.html" class="active">실무 자료</a></li>
+      <li><a href="../index.html">에너지 솔루션</a></li>
+      <li><a href="../index.html">탄소 거래</a></li>
+      <li><a href="../index.html">고객 지원</a></li>
+    </ul>
+  </div>
+  <div class="nav-right">
+    <button class="icon-btn"><i class="fa-regular fa-bell"></i></button>
+    <span class="nav-login">로그인</span>
+    <button class="nav-signup">회원가입</button>
+    <button class="mobile-toggle"><i class="fa-solid fa-bars"></i></button>
+  </div>
+</nav>
+
+<div class="pl-crumb-bar">홈 &rsaquo; <b>실무 자료</b></div>
+
+<div class="page-hero">
+  <h1>실무 자료</h1>
+  <p>도면, 매뉴얼, 기술자료부터 화학물질 호환성 검색까지 — 현장에서 바로 쓰는 자료를 한 곳에서 확인하세요.</p>
+</div>
+
+<div class="res-wrap">
+  <div class="res-grid">
+
+    <a href="chemical-compatibility.html" style="text-decoration:none;">
+      <div class="res-card featured">
+        <span class="ic" style="background:var(--brand-blue);"><i class="fa-solid fa-flask"></i></span>
+        <span class="cnt">NEW · 1,087종 화학물질</span>
+        <h3>케미칼 호환성 검색</h3>
+        <p>화학물질명 또는 펌프 습윤부 재질을 검색해 호환 등급(A~D)을 바로 확인할 수 있는 인터랙티브 도구입니다.</p>
+        <span class="go">바로가기 &rarr;</span>
+      </div>
+    </a>
+
+    <a href="#" style="text-decoration:none;">
+      <div class="res-card">
+        <span class="ic" style="background:var(--navy);"><i class="fa-solid fa-drafting-compass"></i></span>
+        <span class="cnt">CAD / 도면</span>
+        <h3>제품 도면</h3>
+        <p>펌프 모델별 치수도, 단면도, 설치 도면(DWG/PDF)을 다운로드할 수 있습니다.</p>
+        <span class="go">바로가기 &rarr;</span>
+      </div>
+    </a>
+
+    <a href="#" style="text-decoration:none;">
+      <div class="res-card">
+        <span class="ic" style="background:var(--teal);"><i class="fa-solid fa-book"></i></span>
+        <span class="cnt">매뉴얼</span>
+        <h3>제품 매뉴얼</h3>
+        <p>설치, 운전, 유지보수를 위한 제품별 사용자 매뉴얼을 확인하세요.</p>
+        <span class="go">바로가기 &rarr;</span>
+      </div>
+    </a>
+
+    <a href="#" style="text-decoration:none;">
+      <div class="res-card">
+        <span class="ic" style="background:var(--indigo);"><i class="fa-solid fa-lightbulb"></i></span>
+        <span class="cnt">기술자료</span>
+        <h3>기술 가이드</h3>
+        <p>펌프 선정 기준, 효율 개선, 트러블슈팅 등 실무 기술자료 모음입니다.</p>
+        <span class="go">바로가기 &rarr;</span>
+      </div>
+    </a>
+
+    <a href="#" style="text-decoration:none;">
+      <div class="res-card">
+        <span class="ic" style="background:var(--olive);"><i class="fa-solid fa-calculator"></i></span>
+        <span class="cnt">계산 도구</span>
+        <h3>단위 변환 / 계산기</h3>
+        <p>유량, 압력, 점도 등 단위 변환과 펌프 관련 계산을 빠르게 처리하세요.</p>
+        <span class="go">바로가기 &rarr;</span>
+      </div>
+    </a>
+
+    <a href="#" style="text-decoration:none;">
+      <div class="res-card">
+        <span class="ic" style="background:var(--amber);"><i class="fa-solid fa-scale-balanced"></i></span>
+        <span class="cnt">비교 도구</span>
+        <h3>펌프 비교</h3>
+        <p>여러 펌프 모델의 사양을 나란히 비교하고 최적 모델을 선택하세요.</p>
+        <span class="go">바로가기 &rarr;</span>
+      </div>
+    </a>
+
+    <a href="#" style="text-decoration:none;">
+      <div class="res-card">
+        <span class="ic" style="background:var(--emerald);"><i class="fa-solid fa-comments"></i></span>
+        <span class="cnt">문의</span>
+        <h3>기술 문의</h3>
+        <p>제품 및 기술 관련 문의사항을 남기면 담당 엔지니어가 답변드립니다.</p>
+        <span class="go">바로가기 &rarr;</span>
+      </div>
+    </a>
+
+    <a href="#" style="text-decoration:none;">
+      <div class="res-card">
+        <span class="ic" style="background:var(--brand-blue-dark);"><i class="fa-solid fa-file-circle-check"></i></span>
+        <span class="cnt">인증서</span>
+        <h3>인증 / 시험성적서</h3>
+        <p>제품 인증서, 시험성적서, 품질 보증 관련 문서를 확인하세요.</p>
+        <span class="go">바로가기 &rarr;</span>
+      </div>
+    </a>
+
+  </div>
+</div>
+
+<div class="site-footer-stats">
+  <div class="stats-row">
+    <div class="stat-item"><i class="fa-solid fa-users stat-icon"></i><div><div class="stat-label">파트너사</div><div class="stat-value">320+</div></div></div>
+    <div class="stat-item"><i class="fa-solid fa-box stat-icon"></i><div><div class="stat-label">등록 제품</div><div class="stat-value">12,450+</div></div></div>
+    <div class="stat-item"><i class="fa-solid fa-file-invoice stat-icon"></i><div><div class="stat-label">누적 견적</div><div class="stat-value">24,680+</div></div></div>
+    <div class="stat-item"><i class="fa-solid fa-truck stat-icon"></i><div><div class="stat-label">렌탈 장비</div><div class="stat-value">1,250+</div></div></div>
+    <div class="stat-item"><div><div class="stat-label">고객 만족도</div><div class="stat-value"><span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>4.8/5</div></div></div>
+    <div class="stat-item"><div><div class="stat-label">SINCE</div><div class="stat-value">2024</div></div></div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <div><b>PUMPLINK</b><br>Connect Flow, Power Industry<br>&copy; 2024 PUMPLINK. All rights reserved.</div>
+    <div>사업자등록번호 000-00-00000 · 대표 홍길동 · 고객센터 1588-0000 (평일 09:00~18:00)</div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>케미칼 호환성 검색 | PUMPLINK</title>
+<link rel="stylesheet" href="../assets/css/site.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+/* ---- tool-specific styles (reuses brand tokens from site.css) ---- */
+.tool-hero{
+  background: linear-gradient(160deg, var(--navy-deep) 0%, var(--navy) 68%, #0d3c86 100%);
+  color: #eef3fb; padding: 30px 28px 24px; position:relative; overflow:hidden;
+}
+.tool-hero::after{ content:""; position:absolute; right:-70px; top:-70px; width:280px; height:280px; border-radius:50%; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.14), transparent 70%); }
+.tool-hero-eyebrow{ font-family:var(--mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; opacity:.7; margin-bottom:8px; }
+.tool-hero h1{ font-weight:800; font-size:clamp(22px,3.2vw,30px); margin:0 0 6px; letter-spacing:-0.01em; }
+.tool-hero p{ max-width:680px; line-height:1.6; font-size:14px; opacity:.9; margin:0; }
+
+.tabbar{
+  position:sticky; top:65px; z-index:40;
+  display:flex; gap:4px; background:#fff; border-bottom:1px solid var(--line);
+  padding:10px 28px 0; overflow-x:auto;
+}
+.tab-btn{
+  font-family:var(--kr); font-weight:600; font-size:14px; color:var(--gray);
+  background:none; border:none; padding:10px 18px; cursor:pointer;
+  border-radius:8px 8px 0 0; white-space:nowrap; position:relative; top:1px;
+}
+.tab-btn.active{ color:var(--navy); background:var(--paper); border:1px solid var(--line); border-bottom:1px solid var(--paper); }
+.tab-btn.active::after{ content:""; position:absolute; left:14px; right:14px; bottom:-1px; height:2px; background:var(--brand-blue); }
+.panel{ display:none; padding:22px 28px 40px; max-width:1200px; margin:0 auto; }
+.panel.active{ display:block; }
+
+.search-wrap{ position:relative; }
+.search-wrap input{
+  width:100%; padding:13px 16px 13px 40px; border-radius:10px; border:1.5px solid var(--line);
+  background:#fff; font-family:var(--kr); font-size:15px; color:var(--ink); outline:none; transition:border-color .15s;
+}
+.search-wrap input:focus{ border-color:var(--brand-blue); box-shadow:0 0 0 3px rgba(13,85,192,0.12); }
+.search-wrap svg{ position:absolute; left:13px; top:50%; transform:translateY(-50%); opacity:.4; pointer-events:none; }
+
+.autocomplete-list{
+  position:absolute; left:0; right:0; top:calc(100% + 6px); background:#fff; border:1px solid var(--line); border-radius:10px;
+  box-shadow:0 10px 28px rgba(11,46,107,0.12); max-height:320px; overflow-y:auto; z-index:50; display:none;
+}
+.autocomplete-list.show{ display:block; }
+.autocomplete-item{ padding:10px 16px; font-size:14px; cursor:pointer; border-bottom:1px solid var(--line); }
+.autocomplete-item:last-child{ border-bottom:none; }
+.autocomplete-item:hover, .autocomplete-item.hl{ background:#e9f0fb; }
+.autocomplete-empty{ padding:16px; color:var(--gray); font-size:13px; }
+
+.legend{ display:flex; gap:14px; align-items:center; font-family:var(--mono); font-size:11.5px; flex-wrap:wrap; margin-top:14px; }
+.legend .chip{ display:flex; align-items:center; gap:5px; }
+.dot{ width:10px; height:10px; border-radius:3px; display:inline-block; }
+.dot.A{background:var(--g-A);} .dot.B{background:var(--g-B);} .dot.C{background:var(--g-C);}
+.dot.D{background:var(--g-D);} .dot.X{background:var(--g-X);}
+
+.grade-badge{
+  display:inline-flex; align-items:center; justify-content:center; min-width:34px; height:30px; padding:0 6px;
+  border-radius:7px; font-weight:700; font-size:15px; color:#fff; font-family:var(--mono);
+}
+.grade-badge.A{ background:var(--g-A); } .grade-badge.B{ background:var(--g-B); }
+.grade-badge.C{ background:var(--g-C); } .grade-badge.D{ background:var(--g-D); }
+.grade-badge.X{ background:#e7e9ec; color:var(--gray); font-weight:500; }
+.grade-badge sup{ font-size:9px; margin-left:2px; opacity:.9; }
+
+.result-header{ margin:22px 0 6px; }
+.result-header h2{ font-weight:800; font-size:22px; margin:0; color:var(--navy); }
+.result-note{ font-size:13px; color:var(--gray); margin-top:4px; }
+.grade-group{ margin-top:18px; }
+.grade-group-title{ font-family:var(--mono); font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--gray); margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.card-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(190px,1fr)); gap:10px; }
+.mat-card{ background:#fff; border:1px solid var(--line); border-radius:10px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.mat-card .mat-name{ font-size:13.5px; font-weight:600; }
+
+.chip-row{ display:flex; flex-wrap:wrap; gap:8px; margin:16px 0; }
+.mat-chip{ font-family:var(--kr); font-size:13.5px; font-weight:600; padding:8px 14px; border-radius:20px; border:1px solid var(--line); background:#fff; cursor:pointer; color:var(--navy); }
+.mat-chip.active{ background:var(--navy); color:#fff; border-color:var(--navy); }
+
+.filter-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:14px 0; }
+.grade-filter-btn{ font-family:var(--mono); font-size:12.5px; padding:6px 12px; border-radius:16px; border:1px solid var(--line); background:#fff; cursor:pointer; color:var(--ink); }
+.grade-filter-btn.active{ background:var(--brand-blue); color:#fff; border-color:var(--brand-blue); }
+
+.chem-list{ margin-top:10px; border-top:1px solid var(--line); }
+.chem-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 6px; border-bottom:1px solid var(--line); font-size:14px; }
+.chem-row .name{ flex:1; }
+.count-badge{ font-family:var(--mono); font-size:12px; color:var(--navy); background:#e9f0fb; border:1px solid rgba(11,46,107,0.18); padding:5px 10px; border-radius:20px; white-space:nowrap; display:inline-block; margin-left:8px; }
+.empty-state{ padding:40px 10px; text-align:center; color:var(--gray); font-size:14px; }
+.placeholder-state{ padding:40px 10px; text-align:center; color:var(--gray); font-size:14px; }
+.loading-state{ padding:60px 10px; text-align:center; color:var(--gray); font-size:14px; }
+.loading-state i{ margin-right:8px; }
+
+.table-controls{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+.table-scroll{ overflow:auto; max-height: 70vh; border:1px solid var(--line); border-radius:10px; }
+table{ border-collapse:separate; border-spacing:0; width:100%; font-family:var(--mono); font-size:12px; }
+thead th{ position:sticky; top:0; background:#f3f5f8; z-index:20; border-bottom:2px solid var(--navy); padding:9px 7px; text-align:center; font-family:var(--kr); font-weight:700; font-size:11px; white-space:nowrap; color:var(--navy); }
+thead th.name-col{ text-align:left; position:sticky; left:0; z-index:25; background:#f3f5f8; min-width:220px; }
+tbody td{ padding:6px 7px; text-align:center; border-bottom:1px solid var(--line); white-space:nowrap; }
+tbody td.name-col{ text-align:left; position:sticky; left:0; background:var(--paper); font-family:var(--kr); font-size:12.5px; font-weight:600; border-right:1px solid var(--line); min-width:220px; }
+tbody tr:nth-child(even) td.name-col{ background:var(--paper-2); }
+tbody tr:hover td{ background:#eaf1fc !important; }
+.rating{ display:inline-flex; align-items:center; justify-content:center; width:24px; height:20px; border-radius:5px; font-weight:600; font-size:11.5px; color:#fff; }
+.rating.A{ background:var(--g-A); } .rating.B{ background:var(--g-B); }
+.rating.C{ background:var(--g-C); } .rating.D{ background:var(--g-D); }
+.rating.X{ background:transparent; color:var(--gray); font-weight:400; }
+.rating sup{ font-size:7.5px; opacity:.85; margin-left:1px; }
+
+.ov-intro{ font-size:13.5px; color:var(--gray); line-height:1.7; margin:0 0 6px; max-width:820px; }
+.ov-section-title{ font-family:var(--kr); font-weight:800; font-size:17px; color:var(--navy); margin:26px 0 4px; }
+.ov-section-sub{ font-size:12.5px; color:var(--gray); margin:0 0 12px; }
+.ov-table-scroll{ overflow-x:auto; border:1px solid var(--line); border-radius:10px; }
+.ov-table{ border-collapse:collapse; width:100%; font-size:12.5px; min-width:820px; }
+.ov-table th{ background:#f3f5f8; color:var(--navy); font-weight:700; padding:10px 8px; text-align:center; border-bottom:2px solid var(--navy); font-size:11.5px; line-height:1.3; }
+.ov-table th .sub{ font-weight:500; color:var(--gray); font-size:10px; }
+.ov-table td{ padding:9px 8px; text-align:center; border-bottom:1px solid var(--line); font-size:12.5px; }
+.ov-table td.ov-name{ text-align:left; font-weight:700; white-space:nowrap; }
+.ov-table td.ov-swatch{ white-space:nowrap; color:var(--gray); font-size:12px; }
+.ov-table td.ov-temp{ white-space:nowrap; font-family:var(--mono); font-size:11.5px; color:var(--gray); }
+.ov-table td.ov-desc{ text-align:left; font-size:12px; color:var(--gray); max-width:340px; line-height:1.5; }
+.ov-badge{ display:inline-flex; align-items:center; justify-content:center; min-width:26px; height:24px; padding:0 5px; border-radius:6px; font-weight:700; font-size:12.5px; color:#fff; font-family:var(--mono); }
+.ov-badge.A{ background:var(--g-A); } .ov-badge.B{ background:var(--g-B); }
+.ov-badge.C{ background:var(--g-C); } .ov-badge.D{ background:var(--g-D); }
+.ov-badge.NR{ background:#e7e9ec; color:var(--g-D); font-weight:700; }
+.ov-badge.star{ background:#e7e9ec; color:var(--gray); }
+.ov-note{ font-size:11.5px; color:var(--gray); margin-top:8px; line-height:1.7; }
+.ov-caveat{ margin:14px 0 0; background:#fff8ea; border:1px solid rgba(201,112,10,0.3); border-left:4px solid var(--g-C); padding:10px 14px; border-radius:8px; font-size:12px; line-height:1.6; color:#5c4517; }
+
+.tool-footer{ padding:20px 28px 30px; font-size:12px; color:var(--gray); font-family:var(--kr); border-top:1px solid var(--line); line-height:1.7; max-width:1200px; margin:0 auto; }
+.tool-footer b{color:var(--ink);}
+.warn-box{ margin-top:14px; display:flex; gap:10px; align-items:flex-start; background:#fff; border:1px solid rgba(179,56,47,0.25); border-left:4px solid var(--g-D); padding:12px 14px; border-radius:8px; font-size:12.5px; line-height:1.55; }
+
+@media (max-width: 720px){
+  .tool-hero{padding:24px 16px 20px;}
+  .panel{ padding:16px 16px 30px; }
+  .tabbar{ padding:8px 12px 0; top:57px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ NAV (shared) ============ -->
+<nav class="site-nav">
+  <div class="nav-left">
+    <a href="../index.html" class="pl-logo">
+      <span class="word">PUMPLINK</span>
+      <span class="tag">CONNECT FLOW, POWER INDUSTRY</span>
+    </a>
+    <ul class="nav-menu">
+      <li><a href="../index.html">펌프 선정</a></li>
+      <li><a href="../index.html">견적 문의</a></li>
+      <li><a href="../index.html">렌탈 서비스</a></li>
+      <li><a href="index.html" class="active">실무 자료</a></li>
+      <li><a href="../index.html">에너지 솔루션</a></li>
+      <li><a href="../index.html">탄소 거래</a></li>
+      <li><a href="../index.html">고객 지원</a></li>
+    </ul>
+  </div>
+  <div class="nav-right">
+    <button class="icon-btn"><i class="fa-regular fa-bell"></i></button>
+    <span class="nav-login">로그인</span>
+    <button class="nav-signup">회원가입</button>
+    <button class="mobile-toggle"><i class="fa-solid fa-bars"></i></button>
+  </div>
+</nav>
+
+<div class="pl-crumb-bar"><a href="../index.html">홈</a> &rsaquo; <a href="index.html">실무 자료</a> &rsaquo; <b>케미칼 호환성 검색</b></div>
+
+<div class="tool-hero">
+  <div class="tool-hero-eyebrow">Chemical Compatibility Lookup</div>
+  <h1>케미칼 호환성 검색 도구</h1>
+  <p>화학물질명 또는 펌프 습윤부 재질을 검색하면 호환 등급을 바로 확인할 수 있습니다. 등급: A=우수, B=양호, C=보통&sim;미흡, D=비권장, X=데이터 없음</p>
+</div>
+
+<div class="tabbar">
+  <button class="tab-btn active" data-tab="chem">화학물질로 찾기</button>
+  <button class="tab-btn" data-tab="mat">재질로 찾기</button>
+  <button class="tab-btn" data-tab="overview">소재 개요</button>
+  <button class="tab-btn" data-tab="all">전체 표</button>
+</div>
+
+<!-- TAB 1: Chemical search -->
+<div class="panel active" id="panel-chem">
+  <div class="search-wrap">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="chemInput" type="text" placeholder="화학물질명 입력 (예: Acetone, Sulfuric Acid, Sodium Hydroxide...)" autocomplete="off">
+    <div class="autocomplete-list" id="chemAutocomplete"></div>
+  </div>
+  <div class="legend">
+    <span class="chip"><span class="dot A"></span>A 우수</span>
+    <span class="chip"><span class="dot B"></span>B 양호</span>
+    <span class="chip"><span class="dot C"></span>C 보통&sim;미흡</span>
+    <span class="chip"><span class="dot D"></span>D 비권장</span>
+    <span class="chip"><span class="dot X"></span>X 데이터 없음</span>
+  </div>
+  <div id="chemResult"><div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i>데이터를 불러오는 중...</div></div>
+</div>
+
+<!-- TAB 2: Material search -->
+<div class="panel" id="panel-mat">
+  <p style="margin:0 0 4px; font-size:14px; color:var(--gray);">재질을 선택하면 해당 재질과의 호환 화학물질 목록이 표시됩니다.</p>
+  <div class="chip-row" id="matChips"></div>
+  <div class="search-wrap" style="max-width:480px;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="matSearchInput" type="text" placeholder="화학물질명 필터..." autocomplete="off">
+  </div>
+  <div class="filter-row" id="gradeFilterRow">
+    <span style="font-family:var(--mono); font-size:12px; color:var(--gray);">등급 필터:</span>
+    <button class="grade-filter-btn active" data-grade="ALL">전체</button>
+    <button class="grade-filter-btn" data-grade="A">A</button>
+    <button class="grade-filter-btn" data-grade="B">B</button>
+    <button class="grade-filter-btn" data-grade="C">C</button>
+    <button class="grade-filter-btn" data-grade="D">D</button>
+  </div>
+  <span class="count-badge" id="matCountBadge"></span>
+  <div class="chem-list" id="matChemList"></div>
+</div>
+
+<!-- TAB 3: Material overview -->
+<div class="panel" id="panel-overview">
+  <p class="ov-intro">ARO 다이어프램 펌프에 사용되는 소재 자체의 일반 특성 비교표입니다 (개별 화학물질이 아닌 소재군 단위 성능 비교). 화학물질별 상세 호환성은 "화학물질로 찾기" 탭을 이용하세요.</p>
+
+  <div class="ov-section-title">다이어프램 소재 비교</div>
+  <p class="ov-section-sub">Flex Life(굴신 수명) &middot; Abrasion Resistance(내마모성, Balls/Seats 시험 기준) &middot; Acid/Caustic Service(내산/내알칼리성) &middot; Solvents(케톤/아세테이트계 용제) &middot; Hydrocarbons(방향족/염소계 탄화수소) &middot; Petroleum/Oils(석유/오일)</p>
+  <div class="ov-table-scroll">
+    <table class="ov-table">
+      <thead><tr>
+        <th>Compound</th><th>Color Code</th><th>Temperature Limits**</th>
+        <th>Flex Life</th>
+        <th>Abrasion Resistance<br><span class="sub">(Balls/Seats 기준)</span></th>
+        <th>Acid Service</th><th>Caustic Service</th>
+        <th>Solvents<br><span class="sub">(Ketones/Acetates)</span></th>
+        <th>Hydrocarbons<br><span class="sub">(Aromatic/Chlorinated)</span></th>
+        <th>Petroleum/Oils</th>
+      </tr></thead>
+      <tbody id="diaphragmTableBody"></tbody>
+    </table>
+  </div>
+  <div class="ov-note">등급: A=Excellent(우수) &middot; B=Good(양호) &middot; C=Fair(보통) &middot; D=Poor(미흡) &middot; * TPE Hytrel, Urethane은 일부 모델에서 사용 불가 &middot; ** 최대 온도는 기계적 응력 기준이며, 특정 화학물질은 안전 사용 온도를 크게 낮출 수 있습니다.</div>
+  <div class="ov-caveat">⚠ 참고: 원문 PDF의 열 구성이 일부 줄바꿈 없이 병합되어 있어("Hydrocarbons"+"Aromatic/Chlorinated", "Abrasion Resistance"+"Balls (Seats)" 등), 위 컬럼 구성은 원본을 최대한 재구성한 결과입니다. 정밀한 값 확인이 필요하면 원본 PDF 4페이지를 함께 참고해 주세요.</div>
+
+  <div class="ov-section-title">비금속 습윤부 소재 (Non-Metallic Wet End Materials)</div>
+  <p class="ov-section-sub">할로겐화 용제(트리클로로에틸렌, 염화메틸렌 등)는 알루미늄 습윤부와 함께 사용 시 폭발 위험이 있어, 스테인리스·아세탈·PVDF 소재의 펌프만 사용해야 합니다.</p>
+  <div class="ov-table-scroll">
+    <table class="ov-table">
+      <thead><tr><th>소재</th><th>Temperature Limits**</th><th>Acid Service</th><th>Caustic Service</th><th>Solvents<br><span class="sub">(Ketones/Acetates)</span></th><th>Hydrocarbons<br><span class="sub">(Aromatic/Chlorinated)</span></th><th>설명</th></tr></thead>
+      <tbody id="nonmetalTableBody"></tbody>
+    </table>
+  </div>
+  <div class="ov-note">NR = Not Recommended(비권장) &middot; * = 용제/탄화수소 종류에 따라 다르므로 "화학물질로 찾기" 탭에서 개별 확인 필요</div>
+</div>
+
+<!-- TAB 4: Full table -->
+<div class="panel" id="panel-all">
+  <div class="table-controls">
+    <div class="search-wrap" style="flex:1; max-width:420px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="allSearchInput" type="text" placeholder="화학물질명 검색..." autocomplete="off">
+    </div>
+    <span class="count-badge" id="allCountBadge"></span>
+  </div>
+  <div class="table-scroll">
+    <table>
+      <thead><tr id="headerRow"><th class="name-col">화학물질 (Material)</th></tr></thead>
+      <tbody id="tableBody"><tr><td class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i>데이터를 불러오는 중...</td></tr></tbody>
+    </table>
+    <div class="empty-state" id="allEmptyState" style="display:none;">검색 결과가 없습니다.</div>
+  </div>
+</div>
+
+<div class="tool-footer">
+  <div class="warn-box">
+    <span>&#9888;</span>
+    <span><b>참고용 자료입니다.</b> 본 호환성 목록은 소재 공급사 및 제조사 자료를 바탕으로 작성된 참고 자료이며, 정확성을 보증하지 않습니다. 실제 적용 전 반드시 사용 조건에서 자체 테스트를 진행하시기 바랍니다. 알루미늄 습윤부 부품은 트리클로로에틸렌, 염화메틸렌 등 할로겐화 탄화수소 용제와 함께 사용 시 폭발 위험이 있으니 스테인리스, 아세탈, PVDF 소재를 사용하십시오.</span>
+  </div>
+  <p style="margin-top:14px;">
+  <b>출처:</b> ARO® Chemical Compatibility Guide (Ingersoll Rand, IRITS-1114-108-EUEN-1218) &middot;
+  등급: A=Excellent, B=Good, C=Fair to Poor, D=Not recommended, X=데이터 없음(유사 화학물질군 기준 추정) &middot;
+  숫자 표기(예: A/21)는 원문 자료의 특정 온도(&deg;C) 조건 등 추가 참고사항을 의미합니다.<br>
+  본 자료는 정보 제공 목적으로만 재구성되었으며, 실제 구매/적용 결정 전 반드시 원 제조사(Ingersoll Rand / ARO) 및 화학물질 공급사의 최신 자료를 확인하시기 바랍니다.
+  </p>
+</div>
+
+<div class="site-footer-stats">
+  <div class="stats-row">
+    <div class="stat-item"><i class="fa-solid fa-users stat-icon"></i><div><div class="stat-label">파트너사</div><div class="stat-value">320+</div></div></div>
+    <div class="stat-item"><i class="fa-solid fa-box stat-icon"></i><div><div class="stat-label">등록 제품</div><div class="stat-value">12,450+</div></div></div>
+    <div class="stat-item"><i class="fa-solid fa-file-invoice stat-icon"></i><div><div class="stat-label">누적 견적</div><div class="stat-value">24,680+</div></div></div>
+    <div class="stat-item"><i class="fa-solid fa-truck stat-icon"></i><div><div class="stat-label">렌탈 장비</div><div class="stat-value">1,250+</div></div></div>
+    <div class="stat-item"><div><div class="stat-label">고객 만족도</div><div class="stat-value"><span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>4.8/5</div></div></div>
+    <div class="stat-item"><div><div class="stat-label">SINCE</div><div class="stat-value">2024</div></div></div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <div><b>PUMPLINK</b><br>Connect Flow, Power Industry<br>&copy; 2024 PUMPLINK. All rights reserved.</div>
+    <div>사업자등록번호 000-00-00000 · 대표 홍길동 · 고객센터 1588-0000 (평일 09:00~18:00)</div>
+  </div>
+</footer>
+
+<script>
+/* ==================================================
+   Data is now loaded externally (assets/data/chemical-compat.json)
+   instead of being embedded in the HTML. This lets other pages
+   (e.g. pump detail pages) reuse the same file, and keeps this
+   page lightweight + cacheable by the browser/CDN.
+   ================================================== */
+let materials = [];
+let rows = [];
+const gradeLabel = {A:'우수', B:'양호', C:'보통~미흡', D:'비권장', X:'데이터 없음'};
+const gradeOrder = ['A','B','C','D','X'];
+
+function parseRating(raw){
+  if(!raw) return {letter:'X', suffix:''};
+  const letter = /^[ABCD]/.test(raw) ? raw[0] : 'X';
+  const suffix = raw.slice(1).replace(/^\//,'');
+  return {letter, suffix};
+}
+
+fetch('../assets/data/chemical-compat.json')
+  .then(res => {
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  })
+  .then(data => {
+    materials = data.materials;
+    rows = data.rows;
+    initChemTab();
+    initMatTab();
+    initAllTab();
+  })
+  .catch(err => {
+    console.error('데이터 로드 실패:', err);
+    document.getElementById('chemResult').innerHTML =
+      '<div class="empty-state">데이터를 불러오지 못했습니다. assets/data/chemical-compat.json 경로를 확인해 주세요.</div>';
+    document.getElementById('tableBody').innerHTML =
+      '<tr><td class="empty-state">데이터를 불러오지 못했습니다.</td></tr>';
+  });
+
+/* ---------------- Tabs ---------------- */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+    // reflect tab in URL for shareable links, without page reload
+    const url = new URL(window.location);
+    url.searchParams.set('tab', btn.dataset.tab);
+    history.replaceState(null, '', url);
+  });
+});
+// honor ?tab= on load
+(function applyTabFromUrl(){
+  const tab = new URLSearchParams(window.location.search).get('tab');
+  if(tab){
+    const btn = document.querySelector('.tab-btn[data-tab="'+tab+'"]');
+    if(btn) btn.click();
+  }
+})();
+
+/* ==================================================
+   TAB 1: Chemical search with autocomplete
+   ================================================== */
+function initChemTab(){
+  document.getElementById('chemResult').innerHTML =
+    '<div class="placeholder-state" style="margin-top:20px;">화학물질명을 입력하면 재질별 호환 등급이 표시됩니다.</div>';
+
+  const chemInput = document.getElementById('chemInput');
+  const chemAutocomplete = document.getElementById('chemAutocomplete');
+  const chemResult = document.getElementById('chemResult');
+  let acItems = [];
+  let acIndex = -1;
+
+  function renderAutocomplete(query){
+    const q = query.trim().toLowerCase();
+    if(!q){ chemAutocomplete.classList.remove('show'); chemAutocomplete.innerHTML=''; return; }
+    const matches = rows.filter(r => r.name.toLowerCase().includes(q)).slice(0, 30);
+    acItems = matches;
+    acIndex = -1;
+    chemAutocomplete.innerHTML = matches.length === 0
+      ? '<div class="autocomplete-empty">일치하는 화학물질이 없습니다.</div>'
+      : matches.map((m,i)=>'<div class="autocomplete-item" data-idx="'+i+'">'+m.name+'</div>').join('');
+    chemAutocomplete.classList.add('show');
+  }
+
+  chemInput.addEventListener('input', ()=> renderAutocomplete(chemInput.value));
+  chemInput.addEventListener('focus', ()=> { if(chemInput.value) renderAutocomplete(chemInput.value); });
+  document.addEventListener('click', (e)=>{
+    if(!e.target.closest('.search-wrap') || e.target.id !== 'chemInput'){
+      if(!e.target.closest('#chemAutocomplete')) chemAutocomplete.classList.remove('show');
+    }
+  });
+  chemAutocomplete.addEventListener('click', (e)=>{
+    const item = e.target.closest('.autocomplete-item');
+    if(!item || item.dataset.idx === undefined) return;
+    selectChemical(acItems[parseInt(item.dataset.idx)]);
+  });
+  chemInput.addEventListener('keydown', (e)=>{
+    const items = chemAutocomplete.querySelectorAll('.autocomplete-item');
+    if(e.key === 'ArrowDown'){ e.preventDefault(); acIndex = Math.min(acIndex+1, items.length-1); updateHl(items); }
+    else if(e.key === 'ArrowUp'){ e.preventDefault(); acIndex = Math.max(acIndex-1, 0); updateHl(items); }
+    else if(e.key === 'Enter'){
+      e.preventDefault();
+      if(acIndex >= 0 && acItems[acIndex]) selectChemical(acItems[acIndex]);
+      else if(acItems.length === 1) selectChemical(acItems[0]);
+    } else if(e.key === 'Escape'){ chemAutocomplete.classList.remove('show'); }
+  });
+  function updateHl(items){
+    items.forEach((it,i)=> it.classList.toggle('hl', i===acIndex));
+    if(items[acIndex]) items[acIndex].scrollIntoView({block:'nearest'});
+  }
+  function selectChemical(chem){
+    chemInput.value = chem.name;
+    chemAutocomplete.classList.remove('show');
+    renderChemResult(chem);
+  }
+  function renderChemResult(chem){
+    const groups = {A:[], B:[], C:[], D:[], X:[]};
+    chem.ratings.forEach((raw, i)=>{
+      const {letter, suffix} = parseRating(raw);
+      groups[letter].push({mat: materials[i], suffix});
+    });
+    let html = '<div class="result-header"><h2>'+chem.name+'</h2>' +
+      '<div class="result-note">17개 재질에 대한 호환 등급 &middot; 숫자는 원문 자료의 추가 조건(예: 온도 &deg;C)을 의미합니다.</div></div>';
+    gradeOrder.forEach(g=>{
+      if(groups[g].length === 0) return;
+      html += '<div class="grade-group">' +
+        '<div class="grade-group-title"><span class="dot '+g+'"></span>'+g+' &middot; '+gradeLabel[g]+' ('+groups[g].length+'개)</div>' +
+        '<div class="card-grid">' +
+        groups[g].map(item => '<div class="mat-card"><span class="mat-name">'+item.mat+'</span><span class="grade-badge '+g+'">'+g+(item.suffix?('<sup>'+item.suffix+'</sup>'):'')+'</span></div>').join('') +
+        '</div></div>';
+    });
+    chemResult.innerHTML = html;
+  }
+
+  // support deep-link ?chem=NAME
+  const chemParam = new URLSearchParams(window.location.search).get('chem');
+  if(chemParam){
+    const found = rows.find(r => r.name.toLowerCase() === chemParam.toLowerCase());
+    if(found) selectChemical(found);
+  }
+}
+
+/* ==================================================
+   TAB 2: Material search
+   ================================================== */
+function initMatTab(){
+  const matChips = document.getElementById('matChips');
+  const matSearchInput = document.getElementById('matSearchInput');
+  const matChemList = document.getElementById('matChemList');
+  const matCountBadge = document.getElementById('matCountBadge');
+  let selectedMatIdx = null;
+  let selectedGradeFilter = 'ALL';
+
+  materials.forEach((m, i)=>{
+    const chip = document.createElement('button');
+    chip.className = 'mat-chip';
+    chip.textContent = m;
+    chip.dataset.idx = i;
+    chip.addEventListener('click', ()=>{
+      document.querySelectorAll('.mat-chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      selectedMatIdx = i;
+      renderMatList();
+    });
+    matChips.appendChild(chip);
+  });
+  document.querySelectorAll('#gradeFilterRow .grade-filter-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('#gradeFilterRow .grade-filter-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedGradeFilter = btn.dataset.grade;
+      renderMatList();
+    });
+  });
+  matSearchInput.addEventListener('input', renderMatList);
+
+  function renderMatList(){
+    if(selectedMatIdx === null){
+      matChemList.innerHTML = '<div class="placeholder-state">위에서 재질을 선택해 주세요.</div>';
+      matCountBadge.textContent = '';
+      return;
+    }
+    const q = matSearchInput.value.trim().toLowerCase();
+    let list = rows.map(r => {
+      const raw = r.ratings[selectedMatIdx];
+      const {letter, suffix} = parseRating(raw);
+      return {name: r.name, letter, suffix};
+    });
+    if(q) list = list.filter(x => x.name.toLowerCase().includes(q));
+    if(selectedGradeFilter !== 'ALL') list = list.filter(x => x.letter === selectedGradeFilter);
+    list.sort((a,b)=>{
+      const oa = gradeOrder.indexOf(a.letter), ob = gradeOrder.indexOf(b.letter);
+      if(oa !== ob) return oa - ob;
+      return a.name.localeCompare(b.name);
+    });
+    matCountBadge.textContent = list.length + '개 화학물질';
+    if(list.length === 0){ matChemList.innerHTML = '<div class="empty-state">검색 결과가 없습니다.</div>'; return; }
+    matChemList.innerHTML = list.map(item =>
+      '<div class="chem-row"><span class="name">'+item.name+'</span><span class="grade-badge '+item.letter+'">'+item.letter+(item.suffix?('<sup>'+item.suffix+'</sup>'):'')+'</span></div>'
+    ).join('');
+  }
+
+  // support deep-link ?material=NAME
+  const matParam = new URLSearchParams(window.location.search).get('material');
+  if(matParam){
+    const idx = materials.findIndex(m => m.toLowerCase() === matParam.toLowerCase());
+    if(idx >= 0) document.querySelector('.mat-chip[data-idx="'+idx+'"]').click();
+  } else {
+    renderMatList();
+  }
+}
+
+/* ==================================================
+   TAB 4: Full table
+   ================================================== */
+function initAllTab(){
+  const headerRow = document.getElementById('headerRow');
+  materials.forEach(m => { const th = document.createElement('th'); th.textContent = m; headerRow.appendChild(th); });
+
+  function renderRatingCell(raw){
+    const td = document.createElement('td');
+    const {letter, suffix} = parseRating(raw);
+    const span = document.createElement('span');
+    span.className = 'rating ' + letter;
+    span.innerHTML = (raw && raw !== 'X' ? letter : 'X') + (suffix ? '<sup>'+suffix+'</sup>' : '');
+    td.appendChild(span);
+    return td;
+  }
+
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  const fragment = document.createDocumentFragment();
+  rows.forEach(row => {
+    const tr = document.createElement('tr');
+    const nameTd = document.createElement('td');
+    nameTd.className = 'name-col';
+    nameTd.textContent = row.name;
+    nameTd.title = row.name;
+    tr.appendChild(nameTd);
+    row.ratings.forEach(r => tr.appendChild(renderRatingCell(r)));
+    tr._searchName = row.name.toLowerCase();
+    fragment.appendChild(tr);
+  });
+  tbody.appendChild(fragment);
+
+  const allRows = Array.from(tbody.children);
+  const allSearchInput = document.getElementById('allSearchInput');
+  const allCountBadge = document.getElementById('allCountBadge');
+  const allEmptyState = document.getElementById('allEmptyState');
+  let allDebounce = null;
+  allSearchInput.addEventListener('input', ()=>{ clearTimeout(allDebounce); allDebounce = setTimeout(applyAllFilter, 60); });
+  function applyAllFilter(){
+    const q = allSearchInput.value.trim().toLowerCase();
+    let visible = 0;
+    allRows.forEach(tr => {
+      const match = !q || tr._searchName.includes(q);
+      tr.style.display = match ? '' : 'none';
+      if(match) visible++;
+    });
+    allCountBadge.textContent = (q ? '검색 결과 ' : '전체 ') + visible + ' 종';
+    allEmptyState.style.display = visible === 0 ? 'block' : 'none';
+  }
+  allCountBadge.textContent = '전체 ' + rows.length + ' 종';
+}
+
+/* ==================================================
+   TAB 3: Material overview (static reference data, from PDF p.4-5)
+   ================================================== */
+const diaphragmMaterials = [
+  {name:"Santoprene (Backer)", color:"Tan (Green)", temp:"-40° ~ 107°C", flex:"A", abr:"A", acid:"A", caustic:"A", solv:"B", hydro:"D", petro:"D"},
+  {name:"TPE Hytrel*", color:"Cream", temp:"-29° ~ 82°C", flex:"A", abr:"A", acid:"C", caustic:"B", solv:"B", hydro:"C", petro:"A"},
+  {name:"Urethane*", color:"Clear", temp:"-23° ~ 52°C", flex:"A", abr:"A", acid:"D", caustic:"D", solv:"D", hydro:"D", petro:"A"},
+  {name:"PTFE", color:"White", temp:"4° ~ 107°C", flex:"A", abr:"C", acid:"A", caustic:"A", solv:"A", hydro:"A", petro:"A"},
+  {name:"Neoprene", color:"Green", temp:"-18° ~ 93°C", flex:"B", abr:"B", acid:"C", caustic:"C", solv:"D", hydro:"D", petro:"B"},
+  {name:"Nitrile (TS) / BUNA-N", color:"Red", temp:"-12° ~ 82°C", flex:"B", abr:"B", acid:"B", caustic:"C", solv:"C", hydro:"C", petro:"A"},
+  {name:"Viton", color:"Yellow", temp:"-40° ~ 177°C", flex:"C", abr:"B", acid:"A", caustic:"A", solv:"B", hydro:"A", petro:"A"},
+  {name:"EPR/EPDM", color:"Blue", temp:"-51° ~ 138°C", flex:"B", abr:"B", acid:"B", caustic:"A", solv:"B", hydro:"D", petro:"D"},
+];
+const nonmetalMaterials = [
+  {name:"Polypropylene", temp:"0° ~ 79°C", acid:"A", caustic:"A", solv:"NR", hydro:"NR",
+   desc:"저비용 범용 소재로 폭넓은 화학적 저항성을 가지며 다양한 화학 응용 분야에 사용됩니다."},
+  {name:"PVDF (Kynar)", temp:"-12° ~ 93°C", acid:"A", caustic:"A", solv:"*", hydro:"*",
+   desc:"우수한 내화학성을 가진 고성능 불소중합체 수지로, 고온의 강산성 화학물질 이송에 사용되며 기계적 물성도 우수합니다."},
+  {name:"Groundable Acetal", temp:"-29° ~ 82°C", acid:"D", caustic:"D", solv:"A", hydro:"A",
+   desc:"용제 이송에 적합한 소재입니다. 금속 섬유가 포함되어 있어 정전기 축적 및 정전기 방전을 방지하도록 도전성을 갖습니다."},
+];
+function ovGradeCell(g){
+  const cls = ['A','B','C','D'].includes(g) ? g : (g === 'NR' ? 'NR' : 'star');
+  return '<span class="ov-badge '+cls+'">'+g+'</span>';
+}
+document.getElementById('diaphragmTableBody').innerHTML = diaphragmMaterials.map(m =>
+  '<tr><td class="ov-name">'+m.name+'</td><td class="ov-swatch">'+m.color+'</td><td class="ov-temp">'+m.temp+'</td>' +
+  ['flex','abr','acid','caustic','solv','hydro','petro'].map(k => '<td>'+ovGradeCell(m[k])+'</td>').join('') +
+  '</tr>'
+).join('');
+document.getElementById('nonmetalTableBody').innerHTML = nonmetalMaterials.map(m =>
+  '<tr><td class="ov-name">'+m.name+'</td><td class="ov-temp">'+m.temp+'</td>' +
+  '<td>'+ovGradeCell(m.acid)+'</td><td>'+ovGradeCell(m.caustic)+'</td><td>'+ovGradeCell(m.solv)+'</td><td>'+ovGradeCell(m.hydro)+'</td>' +
+  '<td class="ov-desc">'+m.desc+'</td></tr>'
+).join('');
+</script>
+
+</body>
+</html>
