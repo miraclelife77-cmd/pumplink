@@ -330,11 +330,28 @@ svg.trend-svg{ width:100%; height:150px; margin-top:6px; }
     <div class="spec-row"><span>최대 유량</span><span id="rFlow">-</span></div>
     <div class="spec-row"><span>이 양정에서 가능 유량</span><span id="rHead">-</span></div>
     <div class="spec-row"><span>추천 다이어프램/시트</span><span id="rMaterial">-</span></div>
+    <div class="spec-row"><span>도전성 접액부</span><span id="rConductive">-</span></div>
     <div class="spec-row"><span>구동 방식</span><span>Air Operated</span></div>
+    <div style="font-size:11.5px; color:var(--gray); margin-top:8px; line-height:1.5;" id="rHighlight">-</div>
     <div class="pump-btn-row">
       <button class="btn-outline" onclick="window.open('https://www.arozone.com/en/pneumatic-diaphragm-pumps/','_blank')">ARO 홈페이지</button>
       <button class="btn-primary" style="border:none;" id="qCompareBtn">비교하기</button>
     </div>
+
+    <div id="altCard" style="display:none; margin-top:14px; padding-top:12px; border-top:1px dashed var(--line);">
+      <div style="font-size:11px; font-weight:800; color:var(--brand-blue); margin-bottom:8px;">
+        <i class="fa-solid fa-circle-info" style="margin-right:4px;"></i>같은 조건을 만족하는 다른 제품군도 있어요
+      </div>
+      <div class="pump-name" id="aName" style="font-size:13.5px; margin-bottom:2px;">-</div>
+      <div class="spec-row" style="background:var(--paper-2); border-radius:6px; padding:6px 8px; border-bottom:none; margin-bottom:6px;">
+        <span style="font-weight:700; color:var(--navy);">모델 코드(예시)</span><span id="aModelCode" style="font-weight:800; color:var(--brand-blue); font-family:var(--mono);">-</span>
+      </div>
+      <div class="spec-row"><span>최대 유량</span><span id="aFlow">-</span></div>
+      <div class="spec-row"><span>추천 다이어프램/시트</span><span id="aMaterial">-</span></div>
+      <div class="spec-row"><span>도전성 접액부</span><span id="aConductive">-</span></div>
+      <div style="font-size:11.5px; color:var(--gray); margin-top:8px; line-height:1.5;" id="aHighlight">-</div>
+    </div>
+
     <div style="display:flex; gap:6px; margin-top:12px; padding-top:10px; border-top:1px dashed var(--line);">
       <span style="font-size:10.5px; color:var(--gray); flex:1; text-align:center; background:var(--paper-2); border-radius:8px; padding:6px 2px; line-height:1.6;"><i class="fa-solid fa-lock" style="font-size:9px; margin-right:2px;"></i>Wilden<br><span style="font-size:9px; opacity:.7;">준비중</span></span>
       <span style="font-size:10.5px; color:var(--gray); flex:1; text-align:center; background:var(--paper-2); border-radius:8px; padding:6px 2px; line-height:1.6;"><i class="fa-solid fa-lock" style="font-size:9px; margin-right:2px;"></i>Sandpiper<br><span style="font-size:9px; opacity:.7;">준비중</span></span>
@@ -432,31 +449,148 @@ svg.trend-svg{ width:100%; height:150px; margin-top:6px; }
 
 <script>
 (function(){
-  // ARO PRO 시리즈 사이즈별 실 스펙 (공식 데이터시트 기준, model_code는 카탈로그의 "Best Selling Models" 실제 코드)
+  // ARO PRO 시리즈 사이즈별 실 스펙. scheme이 있으면 실제 Ordering Menu로 재질코드 검증 완료(codeVerified:true).
+  // conductive 필드: 이 카탈로그(IRITS-1215-200) Ordering Menu에서 실제 대조 가능한 것만 "yes"/"no"로 표기.
+  // 666xxx 코드의 PRO 1"~3" 대형 모델은 이번 세션에 해당 Ordering Menu 원문이 없어 "unverified"로 남김 — 별도 확인 필요.
   var families = [
-    {size:"1/4\"", construction:"non-metallic", flow:20, pressure:8.6, body:"PP/Acetal/PVDF", model:"PD01P-APS-PAA-A"},
-    {size:"3/8\"", construction:"non-metallic", flow:40.1, pressure:6.9, body:"PP/Acetal/PVDF", model:"PD03P-APS-PAA"},
-    {size:"1/2\"", construction:"non-metallic", flow:54.5, pressure:6.9, body:"PP/Acetal/PVDF", model:"PD05P-APS-PAA-B"},
-    {size:"3/4\"", construction:"non-metallic", flow:56, pressure:6.9, body:"PP", model:"PD07P-APS-PAA"},
-    {size:"1\"", construction:"non-metallic", flow:178, pressure:8.3, body:"PP/PVDF", model:"6661AJ-3EB-C"},
-    {size:"1-1/2\"", construction:"non-metallic", flow:378.5, pressure:8.3, body:"PP/PVDF", model:"6661T3-389-C"},
-    {size:"2\"", construction:"non-metallic", flow:548.8, pressure:8.3, body:"PP/PVDF", model:"6662A3-333-C"},
-    {size:"1/2\"", construction:"metallic", flow:45.4, pressure:6.9, body:"알루미늄/스테인리스", model:"PD05A-BSS-FAA-B"},
-    {size:"3/4\"", construction:"metallic", flow:51.5, pressure:6.9, body:"알루미늄/스테인리스", model:"PD07R-BAS-FAA"},
-    {size:"1\"", construction:"metallic", flow:133, pressure:8.3, body:"알루미늄/스테인리스/주철", model:"666100-3EB-C"},
-    {size:"1-1/2\"", construction:"metallic", flow:340.7, pressure:8.3, body:"알루미늄/스테인리스/주철", model:"66617A-133-C"},
-    {size:"2\"", construction:"metallic", flow:651, pressure:8.3, body:"알루미늄/스테인리스/주철", model:"666252-244-C"},
-    {size:"3\"", construction:"metallic", flow:897, pressure:8.3, body:"알루미늄/스테인리스/주철", model:"666322-144-C"}
+    {size:"1/4\"", series:"PRO", construction:"non-metallic", flow:20, pressure:8.6, body:"PP/Acetal/PVDF", codeVerified:true, scheme:"small-nonmetallic", codePrefix:"PD01P-HPS-", codeSuffix:"-A", conductive:"yes"},
+    {size:"3/8\"", series:"PRO", construction:"non-metallic", flow:40.1, pressure:6.9, body:"PP/Acetal/PVDF", codeVerified:true, scheme:"small-nonmetallic", codePrefix:"PD03P-APS-", codeSuffix:"", conductive:"yes"},
+    {size:"1/2\"", series:"PRO", construction:"non-metallic", flow:54.5, pressure:6.9, body:"PP/Acetal/PVDF", codeVerified:true, scheme:"small-nonmetallic", codePrefix:"PD05P-APS-", codeSuffix:"-B", conductive:"yes"},
+    {size:"3/4\"", series:"PRO", construction:"non-metallic", flow:56, pressure:6.9, body:"PP", codeVerified:true, scheme:"small-nonmetallic", codePrefix:"PD07P-APS-", codeSuffix:"", conductive:"no"},
+    {size:"1\"", series:"PRO", construction:"non-metallic", flow:178, pressure:8.3, body:"PP/PVDF", codeVerified:true, scheme:"big-metallic", codePrefix:"6661AJ-", codeSuffix:"-C", conductive:"unverified"},
+    {size:"1-1/2\"", series:"PRO", construction:"non-metallic", flow:378.5, pressure:8.3, body:"PP/PVDF", codeVerified:true, scheme:"big-nonmetallic", codePrefix:"6661T3-", codeSuffix:"-C", conductive:"unverified"},
+    {size:"2\"", series:"PRO", construction:"non-metallic", flow:548.8, pressure:8.3, body:"PP/PVDF", codeVerified:true, scheme:"big-nonmetallic", codePrefix:"6662A3-", codeSuffix:"-C", conductive:"unverified"},
+    {size:"1/2\"", series:"PRO", construction:"metallic", flow:45.4, pressure:6.9, body:"알루미늄/스테인리스", codeVerified:true, scheme:"small-metallic", codePrefix:"PD05A-AAS-", codeSuffix:"-B", conductive:"metal"},
+    {size:"3/4\"", series:"PRO", construction:"metallic", flow:51.5, pressure:6.9, body:"알루미늄/스테인리스", codeVerified:true, scheme:"small-metallic", codePrefix:"PD07R-AAS-", codeSuffix:"", conductive:"metal"},
+    {size:"1\"", series:"PRO", construction:"metallic", flow:133, pressure:8.3, body:"알루미늄/스테인리스/주철", codeVerified:true, scheme:"big-metallic", codePrefix:"666100-", codeSuffix:"-C", conductive:"metal"},
+    {size:"1-1/2\"", series:"PRO", construction:"metallic", flow:340.7, pressure:8.3, body:"알루미늄/스테인리스/주철", codeVerified:true, scheme:"big-metallic", codePrefix:"666170-", codeSuffix:"-C", conductive:"metal"},
+    {size:"2\"", series:"PRO", construction:"metallic", flow:651, pressure:8.3, body:"알루미늄/스테인리스/주철", codeVerified:true, scheme:"big-metallic", codePrefix:"666250-", codeSuffix:"-C", conductive:"metal"},
+    {size:"3\"", series:"PRO", construction:"metallic", flow:897, pressure:8.3, body:"알루미늄/스테인리스/주철", codeVerified:true, scheme:"big-metallic", codePrefix:"666300-", codeSuffix:"-C", conductive:"metal"},
+
+    // EXP(Expert) 시리즈 — PRO보다 고유량인 프리미엄 라인. 카탈로그(IRITS-1215-200) Ordering Menu(Position 1~8, p.20~41) 대조하여 재질코드 검증 완료.
+    {size:"1\"", series:"EXP", construction:"metallic", flow:197.6, pressure:8.3, body:"알루미늄/스테인리스", codeVerified:true, scheme:"exp-1-metallic", codePrefix:"PD10A-AAS-", codeSuffix:"", conductive:"metal"},
+    {size:"1\"", series:"EXP", construction:"non-metallic", flow:200.6, pressure:8.3, body:"PP/PVDF/Acetal", codeVerified:true, scheme:"exp-1-nonmetallic", codePrefix:"PD10P-APS-", codeSuffix:"", conductive:"yes"},
+    {size:"1-1/2\"", series:"EXP", construction:"metallic", flow:465.6, pressure:8.3, body:"알루미늄/스테인리스/주철", codeVerified:true, scheme:"exp-1.5-metallic", codePrefix:"PD15A-AAS-", codeSuffix:"", conductive:"metal"},
+    {size:"1-1/2\"", series:"EXP", construction:"non-metallic", flow:465.9, pressure:8.3, body:"PP/PVDF", codeVerified:true, scheme:"exp-1.5-nonmetallic", codePrefix:"PD15P-FPS-", codeSuffix:"", conductive:"yes"},
+    {size:"3\"", series:"EXP", construction:"non-metallic", flow:1079, pressure:8.3, body:"PP/PVDF", codeVerified:true, scheme:"exp-3-nonmetallic", codePrefix:"PD30P-DPS-", codeSuffix:"", conductive:"no"}
   ];
-  families.forEach(function(f){ f.headMax = Math.round(f.pressure * 10.2); });
-  // 이송물질 유형별 추천 재질 + 선호 구성(금속/비금속/무관) (fluid_type_material_map.csv 기준)
+  // 시리즈별 공통 차별화 포인트 (카탈로그 p.4~7 근거)
+  var SERIES_HIGHLIGHTS = {
+    PRO: "표준 볼트형 구조 · 상대적으로 낮은 초기 구매가",
+    EXP: "SimulShift 논스톨 밸브 · Quick Dump 방빙(氷) 밸브 · 전자인터페이스(솔레노이드/누출감지) 연동 가능 · ATEX/NEC·CEC 방폭 인증 옵션"
+  };
+  var CONDUCTIVE_TEXT = {
+    yes: "도전성(Conductive) 접액부 옵션 있음 — 정전기 위험구역(ATEX 등) 대응 가능",
+    no: "도전성(Conductive) 접액부 옵션 없음 — 이 사이즈는 일반 비금속 재질만 제공",
+    metal: "금속 바디로 자체 도전성 확보(별도 옵션 불필요)",
+    unverified: "도전성 옵션 여부 미확인 — 이 사이즈는 별도 카탈로그 확인 필요"
+  };
+  // 다이어프램 펌프 추천의 기본 안전 규칙 (사이즈/이송물질 무관 공통 적용):
+  // 1) 1:1비 다이어프램 펌프는 실무상 양정 60m를 사실상의 한계로 본다.
+  // 2) 카탈로그 최대압력은 말 그대로 "최대"이므로, 여유율을 두고 그 아래에서만 추천한다.
+  var SAFETY_MARGIN = 0.85;        // 카탈로그 최대압력 대비 15% 여유율
+  var PRACTICAL_HEAD_CEILING_M = 60; // 1:1비 다이어프램 펌프 실무 한계 양정(m)
+
+  families.forEach(function(f){
+    f.headMaxPhysical = Math.round(f.pressure * 10.2); // 곡선 계산용(실제 압력 스펙 그대로, 보정된 유량곡선과의 정합성 유지)
+    f.headMaxSafe = Math.min(Math.round(f.headMaxPhysical * SAFETY_MARGIN), PRACTICAL_HEAD_CEILING_M); // 추천 가능 여부 판단용
+  });
+
+  // 이송물질 유형별 선호 구성(금속/비금속/무관)
   var fluidMap = {
-    GENERAL_WATER:{diaphragm:"Santoprene", seat:"Santoprene/Nitrile", construction:"any"},
-    CORROSIVE_CHEM:{diaphragm:"PTFE/Viton", seat:"PTFE/Viton", construction:"non-metallic"},
-    OIL_HYDROCARBON:{diaphragm:"Nitrile", seat:"Nitrile", construction:"metallic"},
-    FOOD_SANITARY:{diaphragm:"Hytrel(FDA)", seat:"Hytrel(FDA)", construction:"metallic"},
-    ABRASIVE_SLURRY:{diaphragm:"Santoprene", seat:"스테인리스(400계)", construction:"metallic"},
-    SOLVENT:{diaphragm:"Viton", seat:"Viton", construction:"non-metallic"}
+    GENERAL_WATER:{construction:"any"},
+    CORROSIVE_CHEM:{construction:"non-metallic"},
+    OIL_HYDROCARBON:{construction:"metallic"},
+    FOOD_SANITARY:{construction:"metallic"},
+    ABRASIVE_SLURRY:{construction:"metallic"},
+    SOLVENT:{construction:"non-metallic"}
+  };
+
+  // 사이즈군(scheme)별 재질코드 테이블. 각 scheme마다 실제로 주문 가능한 재질 팔레트가 다르므로,
+  // 이상적 재질이 그 사이즈에 없으면 substituted:true로 표시하고 대체재를 사용함.
+  var SCHEME_CODES = {
+    // 1"/1.5"/2"/3" 금속(666xxx): Seat 1=Al 2=316SS 3=PP 4=PVDF 5=CarbonSteel 8=Hard400SS /
+    // Ball 3=Viton 4=PTFE 8=Polyurethane A=SS C=Hytrel E=Santoprene / Diaphragm 3=Viton 4=PTFE·Santoprene 9=Hytrel B=Santoprene
+    "big-metallic": {
+      GENERAL_WATER:   {code:"1EB", seat:"Aluminum", ball:"Santoprene", dia:"Santoprene", substituted:false},
+      CORROSIVE_CHEM:  {code:"444", seat:"PVDF", ball:"PTFE", dia:"PTFE/Santoprene", substituted:false},
+      OIL_HYDROCARBON: {code:"122", seat:"Aluminum", ball:"Nitrile", dia:"Nitrile", substituted:false},
+      FOOD_SANITARY:   {code:"2C9", seat:"316 Stainless(FDA)", ball:"Hytrel(FDA)", dia:"Hytrel(FDA)", substituted:false},
+      ABRASIVE_SLURRY: {code:"8AB", seat:"Hard 400 Stainless", ball:"Stainless Steel", dia:"Santoprene", substituted:false},
+      SOLVENT:         {code:"433", seat:"PVDF", ball:"Viton", dia:"Viton", substituted:false}
+    },
+    // 1.5"/2" 비금속(볼트형, 6661T3-/6662A3-): Seat엔 알루미늄(1)·탄소강(5) 옵션이 없고, Ball엔 스테인리스(A) 옵션이 없음 — 공식 Ordering 표 확인
+    "big-nonmetallic": {
+      GENERAL_WATER:   {code:"3EB", seat:"Polypropylene", ball:"Santoprene", dia:"Santoprene", substituted:true},
+      CORROSIVE_CHEM:  {code:"444", seat:"PVDF", ball:"PTFE", dia:"PTFE/Santoprene", substituted:false},
+      OIL_HYDROCARBON: {code:"322", seat:"Polypropylene", ball:"Nitrile", dia:"Nitrile", substituted:true},
+      FOOD_SANITARY:   {code:"2C9", seat:"316 Stainless(FDA)", ball:"Hytrel(FDA)", dia:"Hytrel(FDA)", substituted:false},
+      ABRASIVE_SLURRY: {code:"88B", seat:"Hard 400 Stainless", ball:"Polyurethane", dia:"Santoprene", substituted:true},
+      SOLVENT:         {code:"433", seat:"PVDF", ball:"Viton", dia:"Viton", substituted:false}
+    },
+    // 1/2"(PD05A)·3/4"(PD07R) 금속: Seat F=알루미늄 P=PP S=스테인리스 / Ball·Diaphragm A=Santoprene C=Hytrel T=PTFE(다이어프램은 PTFE/Santoprene)
+    "small-metallic": {
+      GENERAL_WATER:   {code:"FAA", seat:"Aluminum", ball:"Santoprene", dia:"Santoprene", substituted:false},
+      CORROSIVE_CHEM:  {code:"PTT", seat:"Polypropylene", ball:"PTFE", dia:"PTFE/Santoprene", substituted:true},
+      OIL_HYDROCARBON: {code:"FTT", seat:"Aluminum", ball:"PTFE", dia:"PTFE/Santoprene", substituted:true},
+      FOOD_SANITARY:   {code:"SCC", seat:"Stainless Steel", ball:"Hytrel(FDA)", dia:"Hytrel(FDA)", substituted:false},
+      ABRASIVE_SLURRY: {code:"SAA", seat:"Stainless Steel", ball:"Santoprene", dia:"Santoprene", substituted:true},
+      SOLVENT:         {code:"PTT", seat:"Polypropylene", ball:"PTFE", dia:"PTFE/Santoprene", substituted:true}
+    },
+    // 1/4"·1/2"·3/4" 비금속(PD0XP): Seat P=폴리프로필렌뿐 / Ball·Diaphragm A=Santoprene C=Hytrel T=PTFE(다이어프램은 PTFE/Santoprene)
+    "small-nonmetallic": {
+      GENERAL_WATER:   {code:"PAA", seat:"Polypropylene", ball:"Santoprene", dia:"Santoprene", substituted:false},
+      CORROSIVE_CHEM:  {code:"PTT", seat:"Polypropylene", ball:"PTFE", dia:"PTFE/Santoprene", substituted:false},
+      OIL_HYDROCARBON: {code:"PTT", seat:"Polypropylene", ball:"PTFE", dia:"PTFE/Santoprene", substituted:true},
+      FOOD_SANITARY:   {code:"PCC", seat:"Polypropylene", ball:"Hytrel(FDA)", dia:"Hytrel(FDA)", substituted:false},
+      ABRASIVE_SLURRY: {code:"PAA", seat:"Polypropylene", ball:"Santoprene", dia:"Santoprene", substituted:true},
+      SOLVENT:         {code:"PTT", seat:"Polypropylene", ball:"PTFE", dia:"PTFE/Santoprene", substituted:true}
+    },
+    // EXP 1" 금속(PD10A, p.34): Seat A/C/E/F/G/H/L/S / Ball A/C/G/S/T/V / Diaphragm A/C/G/L/T/V — 1.5" 금속(PD15A, p.36)과 재질 팔레트 동일
+    "exp-1-metallic": {
+      GENERAL_WATER:   {code:"FAA", seat:"Aluminum", ball:"Santoprene", dia:"Santoprene", substituted:false},
+      CORROSIVE_CHEM:  {code:"STT", seat:"316 Stainless Steel", ball:"PTFE", dia:"PTFE/Santoprene", substituted:false},
+      OIL_HYDROCARBON: {code:"FVV", seat:"Aluminum", ball:"Viton", dia:"Viton", substituted:false},
+      FOOD_SANITARY:   {code:"SCC", seat:"316 Stainless Steel", ball:"Hytrel(FDA)", dia:"Hytrel(FDA)", substituted:false},
+      ABRASIVE_SLURRY: {code:"HSA", seat:"440 Stainless(Hard)", ball:"316 Stainless Steel", dia:"Santoprene", substituted:false},
+      SOLVENT:         {code:"SVV", seat:"316 Stainless Steel", ball:"Viton", dia:"Viton", substituted:false}
+    },
+    // EXP 1.5" 금속(PD15A, p.36): 재질 팔레트가 exp-1-metallic과 동일
+    "exp-1.5-metallic": {
+      GENERAL_WATER:   {code:"FAA", seat:"Aluminum", ball:"Santoprene", dia:"Santoprene", substituted:false},
+      CORROSIVE_CHEM:  {code:"STT", seat:"316 Stainless Steel", ball:"PTFE", dia:"PTFE/Santoprene", substituted:false},
+      OIL_HYDROCARBON: {code:"FVV", seat:"Aluminum", ball:"Viton", dia:"Viton", substituted:false},
+      FOOD_SANITARY:   {code:"SCC", seat:"316 Stainless Steel", ball:"Hytrel(FDA)", dia:"Hytrel(FDA)", substituted:false},
+      ABRASIVE_SLURRY: {code:"HSA", seat:"440 Stainless(Hard)", ball:"316 Stainless Steel", dia:"Santoprene", substituted:false},
+      SOLVENT:         {code:"SVV", seat:"316 Stainless Steel", ball:"Viton", dia:"Viton", substituted:false}
+    },
+    // EXP 1" 비금속(PD10P, p.20): Seat E/K/N/P(금속 시트 옵션 없음) / Ball A/C/G/T/V / Diaphragm A/C/G/L/T/V
+    "exp-1-nonmetallic": {
+      GENERAL_WATER:   {code:"PAA", seat:"Polypropylene", ball:"Santoprene", dia:"Santoprene", substituted:false},
+      CORROSIVE_CHEM:  {code:"KTT", seat:"PVDF", ball:"PTFE", dia:"PTFE/Santoprene", substituted:false},
+      OIL_HYDROCARBON: {code:"PVV", seat:"Polypropylene", ball:"Viton", dia:"Viton", substituted:false},
+      FOOD_SANITARY:   {code:"PCC", seat:"Polypropylene", ball:"Hytrel(FDA)", dia:"Hytrel(FDA)", substituted:true},
+      ABRASIVE_SLURRY: {code:"KAA", seat:"PVDF", ball:"Santoprene", dia:"Santoprene", substituted:true},
+      SOLVENT:         {code:"KVV", seat:"PVDF", ball:"Viton", dia:"Viton", substituted:false}
+    },
+    // EXP 1.5" 비금속(PD15P, p.22): Seat엔 440SS(Hard) 옵션이 있어 마모성 유체에 진짜 경질 시트 적용 가능 — 1"과 차이점
+    "exp-1.5-nonmetallic": {
+      GENERAL_WATER:   {code:"PAA", seat:"Polypropylene", ball:"Santoprene", dia:"Santoprene", substituted:false},
+      CORROSIVE_CHEM:  {code:"KTT", seat:"PVDF", ball:"PTFE", dia:"PTFE/Santoprene", substituted:false},
+      OIL_HYDROCARBON: {code:"PVV", seat:"Polypropylene", ball:"Viton", dia:"Viton", substituted:false},
+      FOOD_SANITARY:   {code:"PCC", seat:"Polypropylene", ball:"Hytrel(FDA)", dia:"Hytrel(FDA)", substituted:true},
+      ABRASIVE_SLURRY: {code:"HSA", seat:"440 Stainless(Hard)", ball:"316 Stainless Steel", dia:"Santoprene", substituted:false},
+      SOLVENT:         {code:"KVV", seat:"PVDF", ball:"Viton", dia:"Viton", substituted:false}
+    },
+    // EXP 3" 비금속(PD30P, p.26): Seat K/P/S뿐, Ball엔 SS 옵션 없음, Diaphragm엔 Viton 옵션 없음 — 3인치는 재질 팔레트가 가장 좁음
+    "exp-3-nonmetallic": {
+      GENERAL_WATER:   {code:"PAA", seat:"Polypropylene", ball:"Santoprene", dia:"Santoprene", substituted:false},
+      CORROSIVE_CHEM:  {code:"KTT", seat:"PVDF", ball:"PTFE", dia:"PTFE/Santoprene", substituted:false},
+      OIL_HYDROCARBON: {code:"PVT", seat:"Polypropylene", ball:"Viton", dia:"PTFE/Santoprene", substituted:true},
+      FOOD_SANITARY:   {code:"PCC", seat:"Polypropylene", ball:"Hytrel(FDA)", dia:"Hytrel(FDA)", substituted:true},
+      ABRASIVE_SLURRY: {code:"STL", seat:"Stainless Steel", ball:"PTFE", dia:"Long-Life PTFE", substituted:true},
+      SOLVENT:         {code:"KVT", seat:"PVDF", ball:"Viton", dia:"PTFE/Santoprene", substituted:true}
+    }
   };
   // 점도 모를 때 정성적 선택지 → 대표 cP값 (viscosity_fallback.csv 참고)
   var viscLevelMidpoint = {WATER_LIKE:25, OIL_LIKE:275, SYRUP_LIKE:2750, PASTE_LIKE:27500};
@@ -469,11 +603,14 @@ svg.trend-svg{ width:100%; height:150px; margin-top:6px; }
     return 1.6;
   }
 
-  // 다이어프램 펌프는 양정이 올라갈수록 낼 수 있는 유량이 줄어든다 (선형 근사: 0 양정=최대유량, 최대양정=유량 0)
-  // 실제 성능곡선(비선형)을 디지털화한 값은 아니며, 카탈로그 그래프 기반 근사치입니다.
+  // 다이어프램 펌프는 양정이 올라갈수록 낼 수 있는 유량이 줄어든다.
+  // 지수(CURVE_EXP)는 3인치 펌프(666300) 카탈로그에 실측 표시된 "850 L/min @ 10m, 8.3bar" 포인트로 역산한 값.
+  // 순수 선형(n=1)보다 낮은 양정 구간에서 유량을 덜 보수적으로(더 정확하게) 예측한다.
+  // 사이즈별 정확한 곡선은 아니며, 확보 가능한 유일한 실측 포인트를 전체 사이즈에 공통 적용한 근사치.
+  var CURVE_EXP = 1.38;
   function availableFlowAt(family, head){
-    if(head >= family.headMax) return 0;
-    return family.flow * (1 - head / family.headMax);
+    if(head >= family.headMaxPhysical) return 0;
+    return family.flow * (1 - Math.pow(head / family.headMaxPhysical, CURVE_EXP));
   }
 
   function recommend(){
@@ -499,7 +636,10 @@ svg.trend-svg{ width:100%; height:150px; margin-top:6px; }
     var rFlow = document.getElementById('rFlow');
     var rHead = document.getElementById('rHead');
     var rMaterial = document.getElementById('rMaterial');
+    var rConductive = document.getElementById('rConductive');
+    var rHighlight = document.getElementById('rHighlight');
     var rWarning = document.getElementById('rWarning');
+    var altCard = document.getElementById('altCard');
 
     function showWarning(msg){
       rWarning.style.display = 'block';
@@ -512,7 +652,26 @@ svg.trend-svg{ width:100%; height:150px; margin-top:6px; }
     function clearResult(){
       rName.textContent = '-'; rSub.textContent = '-'; rModelCode.textContent = '-';
       rFlow.textContent = '-'; rHead.textContent = '-'; rMaterial.textContent = '-';
+      rConductive.textContent = '-'; rHighlight.textContent = '-';
+      altCard.style.display = 'none';
       lastResult = null;
+    }
+    // 후보 하나(family)를 화면 표시용 텍스트로 변환 (코드/재질/도전성/시리즈 특징)
+    function describeCandidate(f, fluidType){
+      var codeText, materialText;
+      if(f.codeVerified){
+        var sc = SCHEME_CODES[f.scheme][fluidType];
+        codeText = f.codePrefix + sc.code + f.codeSuffix;
+        materialText = sc.dia + ' / ' + sc.seat + (sc.substituted ? ' (이 사이즈엔 이상적 재질 옵션이 없어 대체재 적용)' : '');
+      } else {
+        codeText = f.model + ' (재질코드 미검증·참고용)';
+        materialText = '이 사이즈는 재질코드 체계 미검증 — 다음 단계 확인 필요';
+      }
+      return {
+        codeText: codeText, materialText: materialText,
+        conductiveText: CONDUCTIVE_TEXT[f.conductive] || CONDUCTIVE_TEXT.unverified,
+        highlightText: SERIES_HIGHLIGHTS[f.series] || ''
+      };
     }
 
     // 1단계: 이송물질에 맞는 구성(금속/비금속)으로 먼저 좁힌다
@@ -520,18 +679,18 @@ svg.trend-svg{ width:100%; height:150px; margin-top:6px; }
       return mat.construction === 'any' || f.construction === mat.construction;
     });
 
-    // 2단계: 이 구성 안에서 물리적으로 낼 수 있는 최대 양정을 넘어서는지 확인
-    var maxHeadInPool = Math.max.apply(null, pool.map(function(f){ return f.headMax; }));
-    if(head >= maxHeadInPool){
+    // 2단계: 이 구성 안에서 물리적으로 불가능한 양정인지 확인 (카탈로그 최대압력 자체를 넘는 경우만 진짜 불가)
+    var maxPhysicalInPool = Math.max.apply(null, pool.map(function(f){ return f.headMaxPhysical; }));
+    if(head >= maxPhysicalInPool){
       clearResult();
       showWarning('요청하신 양정(' + head + ' m)은 이 이송물질에 적합한 ARO 재질 구성(' +
         (mat.construction === 'metallic' ? '금속' : mat.construction === 'non-metallic' ? '비금속' : '전체') +
-        ')이 낼 수 있는 최대 양정(약 ' + maxHeadInPool + ' m)을 초과합니다. 양정을 낮추거나 다단 구성/타 펌프 타입을 검토하세요.');
+        ')의 카탈로그 최대압력으로도 낼 수 없는 양정(약 ' + maxPhysicalInPool + ' m)입니다. 양정을 낮추거나 다단 구성/타 펌프 타입을 검토하세요.');
       return;
     }
 
-    // 3단계: 해당 양정에서 요청 유량을 낼 수 있는 사이즈 탐색
-    var candidates = pool.map(function(f){
+    // 3단계: 물리적 한계 이내인 사이즈 중, 해당 양정에서 요청 유량을 낼 수 있는 사이즈 탐색 (그래프 기반)
+    var candidates = pool.filter(function(f){ return head < f.headMaxPhysical; }).map(function(f){
       return {f:f, avail: availableFlowAt(f, head)};
     }).filter(function(c){ return c.avail >= requiredFlow; });
 
@@ -546,18 +705,46 @@ svg.trend-svg{ width:100%; height:150px; margin-top:6px; }
     var best = candidates[0].f;
     var availFlow = candidates[0].avail;
 
-    clearWarning();
-    rName.textContent = 'ARO ' + best.size + ' ' + (best.construction === 'metallic' ? '금속' : '비금속');
+    // 4단계: 메인 추천과 다른 제품군(PRO/EXP)에서도 같은 조건을 만족하는 후보가 있으면 "대안"으로 함께 제시
+    var altCandidates = candidates.filter(function(c){ return c.f.series !== best.series; });
+    var alt = altCandidates.length ? altCandidates[0] : null;
+
+    var mainDesc = describeCandidate(best, fluidType);
+
+    rName.textContent = 'ARO ' + best.size + ' ' + (best.construction === 'metallic' ? '금속' : '비금속') + ' (' + best.series + ')';
     rSub.textContent = '공압식 다이어프램 펌프 · 바디: ' + best.body;
-    rModelCode.textContent = best.model;
+    rModelCode.textContent = mainDesc.codeText;
     rFlow.textContent = best.flow + ' L/min (무양정 기준)';
     rHead.textContent = Math.round(availFlow) + ' L/min (요청 양정 ' + head + 'm 기준)';
-    rMaterial.textContent = mat.diaphragm + ' / ' + mat.seat;
+    rMaterial.textContent = mainDesc.materialText;
+    rConductive.textContent = mainDesc.conductiveText;
+    rHighlight.textContent = mainDesc.highlightText;
+
+    if(alt){
+      var altDesc = describeCandidate(alt.f, fluidType);
+      document.getElementById('aName').textContent = 'ARO ' + alt.f.size + ' ' + (alt.f.construction === 'metallic' ? '금속' : '비금속') + ' (' + alt.f.series + ')';
+      document.getElementById('aModelCode').textContent = altDesc.codeText;
+      document.getElementById('aFlow').textContent = alt.f.flow + ' L/min (무양정 기준)';
+      document.getElementById('aMaterial').textContent = altDesc.materialText;
+      document.getElementById('aConductive').textContent = altDesc.conductiveText;
+      document.getElementById('aHighlight').textContent = altDesc.highlightText;
+      altCard.style.display = 'block';
+    } else {
+      altCard.style.display = 'none';
+    }
+
+    // 안전 여유율(15%) + 60m 실무 한계는 넘었지만 물리적으로는 가능한 구간 — 추천은 하되 주의 문구를 함께 표시
+    if(head >= best.headMaxSafe){
+      showWarning('참고: 이 조건(양정 ' + head + ' m)은 1:1비 다이어프램 펌프의 권장 여유 범위(약 ' + best.headMaxSafe +
+        ' m, 최대압력 대비 15% 여유)를 넘어섭니다. 그래프상으로는 가능하지만 최대압력에 가깝게 운전해야 하므로, 실제 적용 전 배관 저항/에어 공급 조건을 다시 확인하시길 권장합니다.');
+    } else {
+      clearWarning();
+    }
 
     lastResult = {
-      size: best.size, construction: best.construction, model: best.model,
+      size: best.size, series: best.series, construction: best.construction, model: mainDesc.codeText,
       flow: best.flow, availFlow: availFlow, headInput: head,
-      material: mat.diaphragm + ' / ' + mat.seat
+      material: mainDesc.materialText
     };
   }
 
@@ -588,7 +775,7 @@ svg.trend-svg{ width:100%; height:150px; margin-top:6px; }
     if(!lastResult){
       grid.innerHTML = '<p style="grid-column:1/-1; font-size:13px; color:var(--gray);">먼저 "추천 펌프 찾기"로 조건을 입력해주세요.</p>';
     } else {
-      var sizeLabel = lastResult.size + ' ' + (lastResult.construction === 'metallic' ? '금속' : '비금속') + ' 상당';
+      var sizeLabel = lastResult.size + ' ' + (lastResult.construction === 'metallic' ? '금속' : '비금속') + ' (' + lastResult.series + ') 상당';
       var deratRatio = lastResult.flow > 0 ? (lastResult.availFlow / lastResult.flow) : 1;
       var cards = buildCompareCard('ARO', lastResult.model,
         lastResult.flow + ' L/min (무양정)',
