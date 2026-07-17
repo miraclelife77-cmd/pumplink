@@ -154,6 +154,29 @@ svg.trend-svg{ width:100%; height:150px; margin-top:6px; }
 .compare-spec{ font-size:11.5px; color:var(--gray); display:flex; justify-content:space-between; border-bottom:1px dashed var(--line); padding:4px 0; }
 .compare-spec b{ color:var(--navy); font-weight:700; }
 .compare-badge{ font-size:9.5px; font-weight:700; background:var(--paper-2); color:var(--gray); border-radius:5px; padding:2px 6px; align-self:flex-start; margin-top:4px; }
+
+/* AI search helper banner */
+.ai-helper{ max-width:1400px; margin:0 auto; padding:0 28px 24px; }
+.ai-helper-inner{ background:linear-gradient(135deg, #eef4ff 0%, #f7f9fa 100%); border:1px solid var(--line); border-radius:var(--radius-lg); padding:20px 24px; }
+.ai-helper-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.ai-helper-head .ic{ width:34px; height:34px; border-radius:9px; background:var(--brand-blue); color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+.ai-helper-head h3{ margin:0; font-size:15px; font-weight:800; color:var(--navy); }
+.ai-helper-head p{ margin:2px 0 0; font-size:12px; color:var(--gray); }
+.ai-helper-box{ display:flex; gap:8px; max-width:640px; }
+.ai-helper-box input{ flex:1; padding:12px 16px; border-radius:10px; border:1.5px solid var(--line); font-size:14px; font-family:var(--kr); outline:none; }
+.ai-helper-box input:focus{ border-color:var(--brand-blue); }
+.ai-helper-box button{ background:var(--brand-blue); color:#fff; border:none; border-radius:10px; padding:0 18px; cursor:pointer; font-size:14px; font-weight:700; white-space:nowrap; }
+.ai-helper-result{ margin-top:14px; }
+.ai-result-card{ background:#fff; border:1px solid var(--line); border-radius:10px; padding:14px 16px; max-width:640px; }
+.ai-result-row{ display:flex; justify-content:space-between; gap:10px; font-size:13px; padding:5px 0; border-bottom:1px dashed var(--line); }
+.ai-result-row:last-of-type{ border-bottom:none; }
+.ai-result-row span:first-child{ color:var(--gray); }
+.ai-result-row span:last-child{ font-weight:700; color:var(--navy); text-align:right; }
+.ai-result-name{ font-weight:800; font-size:15px; color:var(--navy); margin-bottom:6px; }
+.ai-result-legend{ font-size:11px; color:var(--gray); margin-top:8px; }
+.ai-result-note{ font-size:11.5px; color:var(--amber); margin-top:8px; line-height:1.5; }
+.ai-result-btn{ margin-top:12px; background:var(--navy); color:#fff; border:none; border-radius:8px; padding:9px 16px; font-size:12.5px; font-weight:700; cursor:pointer; }
+.ai-empty-state{ max-width:640px; font-size:13px; color:var(--gray); background:#fff; border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
 </style>
 </head>
 <body>
@@ -236,6 +259,24 @@ svg.trend-svg{ width:100%; height:150px; margin-top:6px; }
         <circle cx="360" cy="55" r="4" fill="#f5a24b"/>
       </svg>
     </div>
+  </div>
+</div>
+
+<!-- ============ AI SEARCH HELPER ============ -->
+<div class="ai-helper">
+  <div class="ai-helper-inner">
+    <div class="ai-helper-head">
+      <span class="ic"><i class="fa-solid fa-magnifying-glass"></i></span>
+      <div>
+        <h3>PUMPLINK AI 검색 도우미</h3>
+        <p>화학물질명, 재질명을 입력하면 호환 등급을 바로 확인해드립니다.</p>
+      </div>
+    </div>
+    <div class="ai-helper-box">
+      <input type="text" id="aiHelperInput" placeholder="화학물질, 펌프모델, 재질을 입력해 보세요. 예: HF, Acetone, PTFE, 666120">
+      <button id="aiHelperBtn"><i class="fa-solid fa-magnifying-glass"></i> 검색</button>
+    </div>
+    <div class="ai-helper-result" id="aiHelperResult"></div>
   </div>
 </div>
 
@@ -808,6 +849,127 @@ svg.trend-svg{ width:100%; height:150px; margin-top:6px; }
   });
   document.getElementById('compareOverlay').addEventListener('click', function(e){
     if(e.target === this){ this.classList.remove('open'); }
+  });
+})();
+</script>
+
+<!-- ============ AI SEARCH HELPER LOGIC ============ -->
+<script>
+(function(){
+  var aiRows = [];
+  var aiMaterials = [];
+  var aiGradeLabel = {A:'우수', B:'양호', C:'보통~미흡', D:'비권장', X:'데이터 없음'};
+
+  // 일반적인 화학식/축약형을 chemical-compat.json의 화학물질명 검색어로 연결하는 보조 표.
+  // chemical-compat.json 자체에는 formula 필드가 없어 구조를 바꾸지 않고 이 페이지에서만 보조적으로 사용.
+  var FORMULA_ALIASES = {
+    'HF': 'Hydrofluoric', 'H2SO4': 'Sulfuric Acid', 'HCL': 'Hydrochloric Acid',
+    'HNO3': 'Nitric Acid', 'NAOH': 'Sodium Hydroxide', 'KOH': 'Potassium Hydroxide',
+    'H2O2': 'Hydrogen Peroxide', 'NH3': 'Ammonia', 'NH4OH': 'Ammonium Hydroxide',
+    'CH3COOH': 'Acetic Acid', 'MEK': 'Methyl Ethyl Ketone', 'IPA': 'Alcohol Isopropyl'
+  };
+
+  fetch('assets/data/chemical-compat.json')
+    .then(function(res){ if(!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+    .then(function(data){ aiRows = data.rows; aiMaterials = data.materials; })
+    .catch(function(err){ console.error('AI 검색 도우미 데이터 로드 실패:', err); });
+
+  function parseGradeLetter(raw){
+    return /^[ABCD]/.test(raw || '') ? raw[0] : null;
+  }
+
+  // 재질 배열과 등급 배열은 인덱스로 짝지어져 있음. 가장 좋은 등급을 우선으로 재질 목록을 뽑는다.
+  function summarizeGrades(ratings){
+    var byGrade = {A:[], B:[], C:[], D:[]};
+    ratings.forEach(function(raw, i){
+      var letter = parseGradeLetter(raw);
+      if(letter) byGrade[letter].push(aiMaterials[i]);
+    });
+    var order = ['A','B','C','D'];
+    for(var i=0;i<order.length;i++){
+      if(byGrade[order[i]].length) return {grade: order[i], materials: byGrade[order[i]]};
+    }
+    return null;
+  }
+
+  function findChemicalMatches(query){
+    var q = query.trim().toLowerCase();
+    if(!q) return [];
+    var exact = aiRows.filter(function(r){ return r.name.trim().toLowerCase() === q; });
+    if(exact.length) return exact;
+    var starts = aiRows.filter(function(r){ return r.name.toLowerCase().indexOf(q) === 0; });
+    if(starts.length) return starts;
+    return aiRows.filter(function(r){ return r.name.toLowerCase().indexOf(q) !== -1; });
+  }
+
+  function findMaterialMatch(query){
+    var q = query.trim().toLowerCase();
+    if(!q) return null;
+    return aiMaterials.find(function(m){ return m.toLowerCase().indexOf(q) !== -1; }) || null;
+  }
+
+  function renderChemicalResult(query, matches){
+    // 여러 개(예: 농도별 항목)가 매칭되면 가장 짧은 이름(가장 대표적인 항목)을 기준으로 보여주고, 개수를 함께 안내한다.
+    var best = matches.slice().sort(function(a,b){ return a.name.length - b.name.length; })[0];
+    var summary = summarizeGrades(best.ratings);
+    var formula = null;
+    var upperQ = query.trim().toUpperCase();
+    if(FORMULA_ALIASES[upperQ]) formula = upperQ;
+
+    var html = '<div class="ai-result-card">';
+    html += '<div class="ai-result-name">' + best.name + '</div>';
+    html += '<div class="ai-result-row"><span>formula</span><span>' + (formula || '-') + '</span></div>';
+    html += '<div class="ai-result-row"><span>주요 재질 등급</span><span>' +
+      (summary ? summary.materials.join(', ') + ' (' + summary.grade + ' 등급)' : '적합한 재질 데이터 없음') +
+      '</span></div>';
+    html += '<div class="ai-result-legend">A 우수 · B 양호 · C 보통~미흡 · D 비권장 · X 데이터 없음</div>';
+    if(matches.length > 1){
+      html += '<div class="ai-result-note"><i class="fa-solid fa-circle-info"></i> \'' + query + '\' 계열로 ' + matches.length + '개 항목(농도별 등)이 있습니다. 정확한 값은 상세 보기에서 확인하세요.</div>';
+    }
+    html += '<button class="ai-result-btn" onclick="location.href=\'/resources/chemical-compatibility\'">상세 보기</button>';
+    html += '</div>';
+    return html;
+  }
+
+  function renderMaterialResult(query, material){
+    var html = '<div class="ai-result-card">';
+    html += '<div class="ai-result-name">' + material + '</div>';
+    html += '<div class="ai-result-row"><span>구분</span><span>펌프 습윤부 재질</span></div>';
+    html += '<div class="ai-result-legend">이 재질과 화학물질별 호환 등급은 상세 보기의 "재질로 찾기" 탭에서 확인할 수 있습니다.</div>';
+    html += '<button class="ai-result-btn" onclick="location.href=\'/resources/chemical-compatibility\'">상세 보기</button>';
+    html += '</div>';
+    return html;
+  }
+
+  function renderNotFound(){
+    return '<div class="ai-empty-state">현재 DB에서 찾을 수 없습니다. 정확한 물질명 또는 영문명을 입력해 주세요.</div>';
+  }
+
+  function runAiSearch(){
+    var input = document.getElementById('aiHelperInput');
+    var resultBox = document.getElementById('aiHelperResult');
+    var query = input.value.trim();
+    if(!query){ resultBox.innerHTML = ''; return; }
+
+    var upperQ = query.toUpperCase();
+    var searchTerm = FORMULA_ALIASES[upperQ] || query;
+
+    var chemMatches = findChemicalMatches(searchTerm);
+    if(chemMatches.length){
+      resultBox.innerHTML = renderChemicalResult(query, chemMatches);
+      return;
+    }
+    var materialMatch = findMaterialMatch(query);
+    if(materialMatch){
+      resultBox.innerHTML = renderMaterialResult(query, materialMatch);
+      return;
+    }
+    resultBox.innerHTML = renderNotFound();
+  }
+
+  document.getElementById('aiHelperBtn').addEventListener('click', runAiSearch);
+  document.getElementById('aiHelperInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter') runAiSearch();
   });
 })();
 </script>
