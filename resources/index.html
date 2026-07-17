@@ -15,7 +15,7 @@
 .page-hero p{ font-size:14px; opacity:.9; margin:0; max-width:640px; line-height:1.6; }
 
 .res-wrap{ max-width:1400px; margin:0 auto; padding:26px 28px 50px; }
-.res-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-top:16px; }
+.res-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:16px; }
 .res-card{
   background:#fff; border:1px solid var(--line); border-radius:var(--radius-md); padding:22px;
   display:flex; flex-direction:column; gap:10px; box-shadow:var(--shadow-card); transition:box-shadow .15s, transform .15s;
@@ -29,9 +29,13 @@
 .res-card .cnt{ font-family:var(--mono); font-size:11.5px; color:var(--brand-blue); font-weight:700; }
 .res-card .go{ font-size:13px; font-weight:700; color:var(--navy); margin-top:6px; }
 .res-card.featured{ border:1.5px solid var(--brand-blue); box-shadow:0 0 0 3px rgba(13,85,192,0.08); }
+.res-card.is-soon{ opacity:.72; }
+.res-badge-soon{ display:inline-block; font-size:11px; font-weight:700; color:var(--gray); background:var(--paper-2); border-radius:20px; padding:5px 12px; align-self:flex-start; margin-top:2px; }
+
+.res-note{ margin-top:24px; font-size:12.5px; color:var(--gray); line-height:1.7; background:#fff; border:1px solid var(--line); border-radius:var(--radius-md); padding:14px 16px; }
 
 @media (max-width: 1100px){ .res-grid{ grid-template-columns:repeat(2,1fr); } }
-@media (max-width: 620px){ .res-grid{ grid-template-columns:1fr; } }
+@media (max-width: 620px){ .res-grid{ grid-template-columns:1fr; } .res-wrap{ padding:20px 16px 40px; } }
 </style>
 </head>
 <body>
@@ -63,93 +67,68 @@
 <div class="pl-crumb-bar">홈 &rsaquo; <b>실무 자료</b></div>
 
 <div class="page-hero">
-  <h1>실무 자료</h1>
-  <p>도면, 매뉴얼, 기술자료부터 화학물질 호환성 검색까지 — 현장에서 바로 쓰는 자료를 한 곳에서 확인하세요.</p>
+  <h1>기술자료</h1>
+  <p>펌프 선정, 화학물질 호환성, 매뉴얼, CAD, 수리자료를 한곳에서 확인합니다.</p>
 </div>
 
 <div class="res-wrap">
   <div class="res-grid">
 
-    <a href="chemical-compatibility.html" style="text-decoration:none;">
+    <a href="/resources/chemical-compatibility" style="text-decoration:none;">
       <div class="res-card featured">
         <span class="ic" style="background:var(--brand-blue);"><i class="fa-solid fa-flask"></i></span>
         <span class="cnt">NEW · 1,087종 화학물질</span>
-        <h3>케미칼 호환성 검색</h3>
-        <p>화학물질명 또는 펌프 습윤부 재질을 검색해 호환 등급(A~D)을 바로 확인할 수 있는 인터랙티브 도구입니다.</p>
+        <h3>화학물질 호환성</h3>
+        <p>ARO Chemical Compatibility Guide 기반으로 화학물질별 재질 호환성을 검색합니다.</p>
         <span class="go">바로가기 &rarr;</span>
       </div>
     </a>
 
-    <a href="#" style="text-decoration:none;">
-      <div class="res-card">
-        <span class="ic" style="background:var(--navy);"><i class="fa-solid fa-drafting-compass"></i></span>
-        <span class="cnt">CAD / 도면</span>
-        <h3>제품 도면</h3>
-        <p>펌프 모델별 치수도, 단면도, 설치 도면(DWG/PDF)을 다운로드할 수 있습니다.</p>
-        <span class="go">바로가기 &rarr;</span>
-      </div>
-    </a>
+    <div class="res-card is-soon">
+      <span class="ic" style="background:var(--teal);"><i class="fa-solid fa-book"></i></span>
+      <span class="cnt">매뉴얼 / 카탈로그</span>
+      <h3>매뉴얼 / 카탈로그</h3>
+      <p>ARO, Albin, Versamatic 등 주요 펌프 자료를 정리할 예정입니다.</p>
+      <span class="res-badge-soon">준비중</span>
+    </div>
 
-    <a href="#" style="text-decoration:none;">
-      <div class="res-card">
-        <span class="ic" style="background:var(--teal);"><i class="fa-solid fa-book"></i></span>
-        <span class="cnt">매뉴얼</span>
-        <h3>제품 매뉴얼</h3>
-        <p>설치, 운전, 유지보수를 위한 제품별 사용자 매뉴얼을 확인하세요.</p>
-        <span class="go">바로가기 &rarr;</span>
-      </div>
-    </a>
+    <div class="res-card is-soon">
+      <span class="ic" style="background:var(--navy);"><i class="fa-solid fa-chart-line"></i></span>
+      <span class="cnt">성능곡선 / 선정자료</span>
+      <h3>성능곡선 / 선정자료</h3>
+      <p>유량, 양정, 압력 조건에 따른 펌프 선정 자료를 정리합니다.</p>
+      <span class="res-badge-soon">준비중</span>
+    </div>
 
-    <a href="#" style="text-decoration:none;">
-      <div class="res-card">
-        <span class="ic" style="background:var(--indigo);"><i class="fa-solid fa-lightbulb"></i></span>
-        <span class="cnt">기술자료</span>
-        <h3>기술 가이드</h3>
-        <p>펌프 선정 기준, 효율 개선, 트러블슈팅 등 실무 기술자료 모음입니다.</p>
-        <span class="go">바로가기 &rarr;</span>
-      </div>
-    </a>
+    <div class="res-card is-soon">
+      <span class="ic" style="background:var(--indigo);"><i class="fa-solid fa-drafting-compass"></i></span>
+      <span class="cnt">CAD / 도면자료</span>
+      <h3>CAD / 도면자료</h3>
+      <p>설치 검토와 배관 설계를 위한 외형도, 치수도, CAD 자료를 정리합니다.</p>
+      <span class="res-badge-soon">준비중</span>
+    </div>
 
-    <a href="#" style="text-decoration:none;">
-      <div class="res-card">
-        <span class="ic" style="background:var(--olive);"><i class="fa-solid fa-calculator"></i></span>
-        <span class="cnt">계산 도구</span>
-        <h3>단위 변환 / 계산기</h3>
-        <p>유량, 압력, 점도 등 단위 변환과 펌프 관련 계산을 빠르게 처리하세요.</p>
-        <span class="go">바로가기 &rarr;</span>
-      </div>
-    </a>
+    <div class="res-card is-soon">
+      <span class="ic" style="background:var(--amber);"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+      <span class="cnt">부품 / 수리자료</span>
+      <h3>부품 / 수리자료</h3>
+      <p>다이어프램, 체크볼, 체크시트, 에어밸브 등 주요 소모품과 수리 기준을 정리합니다.</p>
+      <span class="res-badge-soon">준비중</span>
+    </div>
 
-    <a href="#" style="text-decoration:none;">
-      <div class="res-card">
-        <span class="ic" style="background:var(--amber);"><i class="fa-solid fa-scale-balanced"></i></span>
-        <span class="cnt">비교 도구</span>
-        <h3>펌프 비교</h3>
-        <p>여러 펌프 모델의 사양을 나란히 비교하고 최적 모델을 선택하세요.</p>
-        <span class="go">바로가기 &rarr;</span>
-      </div>
-    </a>
+    <div class="res-card is-soon">
+      <span class="ic" style="background:var(--emerald);"><i class="fa-solid fa-industry"></i></span>
+      <span class="cnt">적용사례 / 산업별 자료</span>
+      <h3>적용사례 / 산업별 자료</h3>
+      <p>필터프레스, 슬러리, 화학 이송, 리튬 재활용 등 현장별 적용 사례를 정리합니다.</p>
+      <span class="res-badge-soon">준비중</span>
+    </div>
 
-    <a href="#" style="text-decoration:none;">
-      <div class="res-card">
-        <span class="ic" style="background:var(--emerald);"><i class="fa-solid fa-comments"></i></span>
-        <span class="cnt">문의</span>
-        <h3>기술 문의</h3>
-        <p>제품 및 기술 관련 문의사항을 남기면 담당 엔지니어가 답변드립니다.</p>
-        <span class="go">바로가기 &rarr;</span>
-      </div>
-    </a>
+  </div>
 
-    <a href="#" style="text-decoration:none;">
-      <div class="res-card">
-        <span class="ic" style="background:var(--brand-blue-dark);"><i class="fa-solid fa-file-circle-check"></i></span>
-        <span class="cnt">인증서</span>
-        <h3>인증 / 시험성적서</h3>
-        <p>제품 인증서, 시험성적서, 품질 보증 관련 문서를 확인하세요.</p>
-        <span class="go">바로가기 &rarr;</span>
-      </div>
-    </a>
-
+  <div class="res-note">
+    <i class="fa-solid fa-circle-info" style="margin-right:6px;"></i>
+    자료는 제조사 카탈로그와 현장 검토 기준을 바탕으로 정리되며, 최종 선정은 운전조건 확인 후 진행됩니다.
   </div>
 </div>
 
