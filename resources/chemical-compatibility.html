@@ -416,7 +416,35 @@ function initChemTab(){
     chemAutocomplete.classList.remove('show');
     renderChemResult(chem);
   }
-  function renderChemResult(chem){
+  
+  const comparisonGroups = [
+    {title:'Chromic Acid', test:/^Chromic Acid - (5|50)%$/i},
+    {title:'Hydrochloric Acid', test:/^Hydrochloric Acid (20|37)%$/i},
+    {title:'Hydrofluoric Acid', test:/^Hydrofluoric Acid (20|50|75)%$|^Hydrofluoric Acid Concentrated$/i},
+    {title:'Nitric Acid', test:/^Nitric Acid (Concentrated|Red Fuming|5%|20%|50%|65%)/i},
+    {title:'Phosphoric Acid', test:/^Phosphoric Acid (20%|40-100%)/i},
+    {title:'Sodium Hydroxide', test:/^Sodium Hydroxide (20|50|80)%/i},
+    {title:'Sulfuric Acid', test:/^Sulfuric Acid|^Oleum \(Fuming Sulfuric Acid\)$/i},
+    {title:'Sodium Sulfide', test:/^Sodium Sulfide(?: - Saturated)?$/i}
+  ];
+  function renderComparison(group, selected){
+    const related = rows.filter(r=>group.test.test(r.name));
+    if(related.length < 2) return '';
+    const differences = materials.map((_,i)=>new Set(related.map(r=>r.ratings[i])).size>1);
+    let html='<div class="result-header"><h2>'+group.title+' · 농도/상태별 비교</h2><div class="result-note">동일 계열 '+related.length+'개 조건을 함께 표시합니다. 강조된 칸은 조건에 따라 등급이 달라집니다. 중간 농도의 등급은 보간하지 않습니다. 온도·상태 조건을 확인하세요.</div></div>';
+    html+='<div style="overflow-x:auto;max-width:100%;margin:18px 0 22px"><table style="border-collapse:collapse;min-width:1200px;width:100%"><thead><tr><th style="position:sticky;left:0;background:#e8eef5;z-index:2;min-width:240px;text-align:left;padding:12px">농도 / 상태</th>'+materials.map(m=>'<th style="padding:9px 7px;font-size:12px">'+m+'</th>').join('')+'</tr></thead><tbody>';
+    related.forEach(r=>{
+      html+='<tr><td style="position:sticky;left:0;background:#fff;min-width:240px;padding:10px;font-weight:600">'+r.name+(r.name===selected.name?' ✓':'')+'</td>';
+      r.ratings.forEach((raw,i)=>{const p=parseRating(raw); html+='<td style="text-align:center;padding:9px 6px;'+(differences[i]?'background:#fff0ca;':'')+'"><span class="grade-badge '+p.letter+'">'+p.letter+(p.suffix?'<sup>'+p.suffix+'</sup>':'')+'</span></td>';});
+      html+='</tr>';
+    });
+    html+='</tbody></table></div><div class="result-note">※ ARO 원자료 등급을 그대로 표시합니다. 조건별 등급 차이가 있어도 중간 농도의 적합성을 추정하거나 보증하지 않습니다.</div>';
+    return html;
+  }
+function renderChemResult(chem){
+    const group = comparisonGroups.find(g=>g.test.test(chem.name));
+    if(group){ chemResult.innerHTML=renderComparison(group,chem); return; }
+
     const groups = {A:[], B:[], C:[], D:[], X:[]};
     chem.ratings.forEach((raw, i)=>{
       const {letter, suffix} = parseRating(raw);
